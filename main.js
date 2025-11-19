@@ -104,7 +104,7 @@ const reflectiveFloor = new Reflector(floorGeo, {
 
 reflectiveFloor.rotation.x = -Math.PI / 2;
 reflectiveFloor.position.y = -0.09;
-scene.add(reflectiveFloor);
+//scene.add(reflectiveFloor);
 
 // ========= TEXTURAS CERÁMICAS (NORMAL + ROUGHNESS) =========
 const textureLoader = new THREE.TextureLoader();
