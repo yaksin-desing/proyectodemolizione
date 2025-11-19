@@ -57,7 +57,7 @@ const pmremGenerator = new THREE.PMREMGenerator(renderer);
 pmremGenerator.compileEquirectangularShader();
 
 new RGBELoader()
-  .setPath("./")
+  .setPath("")
   .load("hdri.hdr", (hdrMap) => {
     const envMap = pmremGenerator.fromEquirectangular(hdrMap).texture;
     scene.environment = envMap;
@@ -110,19 +110,19 @@ scene.add(reflectiveFloor);
 const textureLoader = new THREE.TextureLoader();
 
 // displacement map
-const displacementMap = textureLoader.load("./marmol_disp.png");
+const displacementMap = textureLoader.load("marmol_disp.png");
 displacementMap.wrapS = THREE.RepeatWrapping;
 displacementMap.wrapT = THREE.RepeatWrapping;
 displacementMap.repeat.set(5, 5);
 
 // carga el normal map
-const normalMap = textureLoader.load("./marmol_normal.jpg");
+const normalMap = textureLoader.load("marmol_normal.jpg");
 normalMap.wrapS = THREE.RepeatWrapping;
 normalMap.wrapT = THREE.RepeatWrapping;
 normalMap.repeat.set(5, 5);
 
 // carga el roughness map
-const roughnessMap = textureLoader.load("./marmol_rough.jpg");
+const roughnessMap = textureLoader.load("marmol_rough.jpg");
 roughnessMap.wrapS = THREE.RepeatWrapping;
 roughnessMap.wrapT = THREE.RepeatWrapping;
 roughnessMap.repeat.set(5, 5);
