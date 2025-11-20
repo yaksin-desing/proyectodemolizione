@@ -24,6 +24,8 @@ if (!container) throw new Error("Falta <div id='canvas-container'> en tu HTML");
 
 // ========= ESCENA =========
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xffffff); // blanco
+
 
 // ========= CÁMARA =========
 const camera = new THREE.PerspectiveCamera(
@@ -96,15 +98,15 @@ const floorGeo = new THREE.PlaneGeometry(50, 50);
 
 // Reflector para el reflejo
 const reflectiveFloor = new Reflector(floorGeo, {
-  clipBias: 0.01,
-  textureWidth: window.innerWidth * 0.7,
-  textureHeight: window.innerHeight * 0.7,
+  clipBias: 0.1,
+  textureWidth: window.innerWidth * 1,
+  textureHeight: window.innerHeight * 1,
   color: 0xffffff,
 });
 
 reflectiveFloor.rotation.x = -Math.PI / 2;
 reflectiveFloor.position.y = -0.09;
-//scene.add(reflectiveFloor);
+scene.add(reflectiveFloor);
 
 // ========= TEXTURAS CERÁMICAS (NORMAL + ROUGHNESS) =========
 const textureLoader = new THREE.TextureLoader();
