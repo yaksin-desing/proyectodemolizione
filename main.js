@@ -71,7 +71,7 @@ new RGBELoader()
 // ========= CIELO =========
 const sky = new Sky();
 sky.scale.setScalar(450000);
-//scene.add(sky);
+scene.add(sky);
 
 const skyUniforms = sky.material.uniforms;
 skyUniforms["turbidity"].value = 20;
@@ -94,7 +94,7 @@ skyUniforms["sunPosition"].value.copy(sun);
 // ========= PISO CERÁMICO REFLECTIVO (Reflector) =========
 
 // Geometría del piso
-const floorGeo = new THREE.PlaneGeometry(50, 50);
+const floorGeo = new THREE.PlaneGeometry(200, 100);
 
 // Reflector para el reflejo
 const reflectiveFloor = new Reflector(floorGeo, {
@@ -106,7 +106,7 @@ const reflectiveFloor = new Reflector(floorGeo, {
 
 reflectiveFloor.rotation.x = -Math.PI / 2;
 reflectiveFloor.position.y = -0.09;
-scene.add(reflectiveFloor);
+//scene.add(reflectiveFloor);
 
 // ========= TEXTURAS CERÁMICAS (NORMAL + ROUGHNESS) =========
 const textureLoader = new THREE.TextureLoader();
@@ -133,12 +133,12 @@ roughnessMap.repeat.set(5, 5);
 const ceramicMaterial = new THREE.MeshPhysicalMaterial({
   color: new THREE.Color(1.0, 1.0, 1.0),
 
-  roughness: 0.25,
+  roughness: 0.5,
   metalness: 0.0,
 
   // === texturas añadidas ===
-  normalMap: normalMap,
-  normalScale: new THREE.Vector2(0.5, 0.5),
+  //normalMap: normalMap,
+  //normalScale: new THREE.Vector2(0.5, 0.5),
   roughnessMap: roughnessMap,
 
   displacementMap: displacementMap,
