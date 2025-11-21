@@ -18,7 +18,7 @@ scene.background = new THREE.Color(0xffffff);
 
 // ========= CÁMARA =========
 const camera = new THREE.PerspectiveCamera(
-  45,
+  75,
   window.innerWidth / window.innerHeight,
   0.1,
   2000
@@ -79,7 +79,7 @@ sun.setFromSphericalCoords(1, phi, theta);
 skyUniforms["sunPosition"].value.copy(sun);
 
 // ========= LUZ PRINCIPAL CON SOMBRAS =========
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.1);
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
 dirLight.position.set(10, 20, 10);
 dirLight.castShadow = true;
 
@@ -109,7 +109,7 @@ scene.add(shadowHelper);
 
 
 // ========= PISO CERÁMICO =========
-const floorGeo = new THREE.PlaneGeometry(200, 100);
+const floorGeo = new THREE.PlaneGeometry(80, 70);
 
 // Reflector (no recibe sombras)
 const reflectiveFloor = new Reflector(floorGeo, {
@@ -181,7 +181,7 @@ loader.load("./scene.glb", (gltf) => {
       c.receiveShadow = true;
 
       if (c.material) {
-        c.material.envMapIntensity = 0.4;
+        c.material.envMapIntensity = 0.3;
         c.material.needsUpdate = true;
       }
     }
