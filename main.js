@@ -49,7 +49,7 @@ pmremGenerator.compileEquirectangularShader();
 
 new RGBELoader()
   .setPath("")
-  .load("hdri.hdr", (hdrMap) => {
+  .load("hdris.hdr", (hdrMap) => {
     const envMap = pmremGenerator.fromEquirectangular(hdrMap).texture;
     scene.environment = envMap;
 
@@ -111,16 +111,7 @@ scene.add(shadowHelper);
 // ========= PISO CERÁMICO =========
 const floorGeo = new THREE.PlaneGeometry(80, 70);
 
-// Reflector (no recibe sombras)
-const reflectiveFloor = new Reflector(floorGeo, {
-  clipBias: 0.1,
-  textureWidth: window.innerWidth,
-  textureHeight: window.innerHeight,
-  color: 0xffffff,
-});
-reflectiveFloor.rotation.x = -Math.PI / 2;
-reflectiveFloor.position.y = -0.09;
-// scene.add(reflectiveFloor);
+
 
 // Texturas
 const textureLoader = new THREE.TextureLoader();
@@ -181,7 +172,7 @@ loader.load("./scene.glb", (gltf) => {
       c.receiveShadow = true;
 
       if (c.material) {
-        c.material.envMapIntensity = 0.3;
+        c.material.envMapIntensity = 0.4;
         c.material.needsUpdate = true;
       }
     }
