@@ -43,19 +43,28 @@ controls.dampingFactor = 0.03;
 controls.target.set(0, 1, 0);
 controls.update();
 
-// ========= HDRI =========
-const pmremGenerator = new THREE.PMREMGenerator(renderer);
-pmremGenerator.compileEquirectangularShader();
 
-new RGBELoader()
-  .setPath("")
-  .load("hdris.hdr", (hdrMap) => {
-    const envMap = pmremGenerator.fromEquirectangular(hdrMap).texture;
-    scene.environment = envMap;
 
-    hdrMap.dispose();
-    pmremGenerator.dispose();
-  });
+// ========= NO en Android =========
+const esAndroid = /android/i.test(navigator.userAgent);
+
+if (!esAndroid) {
+  const pmremGenerator = new THREE.PMREMGenerator(renderer);
+  pmremGenerator.compileEquirectangularShader();
+
+  new RGBELoader()
+    .setPath("")
+    .load("hdri.hdr", (hdrMap) => {
+      const envMap = pmremGenerator.fromEquirectangular(hdrMap).texture;
+      scene.environment = envMap;
+
+      hdrMap.dispose();
+      pmremGenerator.dispose();
+    });
+} else {
+  console.warn("HDRI desactivado en Android para mejorar rendimiento.");
+}
+
 
 // ========= CIELO =========
 const sky = new Sky();
@@ -146,8 +155,11 @@ const ceramicMaterial = new THREE.MeshPhysicalMaterial({
 
   transparent: false,
   opacity: 1,
+
 });
 
+
+ceramicMaterial.envMapIntensity = 0.7; // intensificar para PC/iOS
 const ceramicLayer = new THREE.Mesh(floorGeo, ceramicMaterial);
 ceramicLayer.rotation.x = -Math.PI / 2;
 ceramicLayer.position.y = -0.1;
@@ -172,7 +184,7 @@ loader.load("./scene.glb", (gltf) => {
       c.receiveShadow = true;
 
       if (c.material) {
-        c.material.envMapIntensity = 0.4;
+        c.material.envMapIntensity = 0.5;
         c.material.needsUpdate = true;
       }
     }
