@@ -19,7 +19,7 @@ const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
   0.1,
-  2000
+  500
 );
 camera.position.set(0, 1, 7);
 
@@ -87,7 +87,6 @@ const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
 dirLight.position.set(10, 20, 10);
 dirLight.castShadow = true;
 
-// sombras
 dirLight.shadow.mapSize.width = 2048;
 dirLight.shadow.mapSize.height = 2048;
 dirLight.shadow.camera.near = 0.5;
@@ -141,7 +140,7 @@ ceramicLayer.position.y = -0.1;
 ceramicLayer.receiveShadow = true;
 scene.add(ceramicLayer);
 
-// ========= CARGA MODELO + CAMARA GLB =========
+// ========= CARGA MODELO + CÁMARA GLB =========
 const gltfLoader = new GLTFLoader();
 let mixer = null;
 let cameraGLB = null;
@@ -153,9 +152,17 @@ gltfLoader.load("./scene.glb", (gltf) => {
 
   root.traverse((obj) => {
     if (obj.isCamera) {
-      cameraGLB = obj;            // ← ← Cámara animada de Blender
-      controls.enabled = false;   // ← Desactivar OrbitControls
+      cameraGLB = obj; // ← Cámara del GLB
+      controls.enabled = false;
+
+      // ===== AJUSTES DE LA CÁMARA DEL MODELO =====  // <<<
+      cameraGLB.fov = 75; 
+      cameraGLB.aspect = window.innerWidth / window.innerHeight;
+      cameraGLB.near = 0.1;
+      cameraGLB.far = 500;
+      cameraGLB.updateProjectionMatrix(); // IMPORTANTE
     }
+
     if (obj.isMesh) {
       obj.castShadow = true;
       obj.receiveShadow = true;
@@ -197,9 +204,17 @@ function animate() {
 
 animate();
 
-// ========= RESIZE =========
+// ========= RESIZE (también ajusta cámara GLB) =========
 window.addEventListener("resize", () => {
+  // cámara normal
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
+
+  // cámara del modelo     // <<<
+  if (cameraGLB) {
+    cameraGLB.aspect = innerWidth / innerHeight;
+    cameraGLB.updateProjectionMatrix();
+  }
+
   renderer.setSize(innerWidth, innerHeight);
 });
