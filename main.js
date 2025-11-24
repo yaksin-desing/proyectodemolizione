@@ -150,17 +150,18 @@ gltfLoader.load("./scene.glb", (gltf) => {
   const root = gltf.scene;
   scene.add(root);
 
+  // Detectar cámara del GLB
   root.traverse((obj) => {
     if (obj.isCamera) {
-      cameraGLB = obj; // ← Cámara del GLB
+      cameraGLB = obj;
       controls.enabled = false;
 
-      // ===== AJUSTES DE LA CÁMARA DEL MODELO =====  // <<<
-      cameraGLB.fov = 75; 
+      // Ajustes de cámara GLB
+      cameraGLB.fov = 75;
       cameraGLB.aspect = window.innerWidth / window.innerHeight;
       cameraGLB.near = 0.1;
       cameraGLB.far = 500;
-      cameraGLB.updateProjectionMatrix(); // IMPORTANTE
+      cameraGLB.updateProjectionMatrix();
     }
 
     if (obj.isMesh) {
@@ -174,10 +175,41 @@ gltfLoader.load("./scene.glb", (gltf) => {
     }
   });
 
-  // Animaciones (modelo + cámara)
+  // ========= ANIMACIONES SEPARADAS =========
   if (gltf.animations.length > 0) {
     mixer = new THREE.AnimationMixer(root);
-    gltf.animations.forEach((clip) => mixer.clipAction(clip).play());
+
+    let cameraClip = null;
+    let modelClips = [];
+
+    // Clasificar animaciones por tipo
+    gltf.animations.forEach((clip) => {
+      const isCameraAnim = clip.tracks.some(t =>
+        t.name.toLowerCase().includes("camera")
+      );
+
+      if (isCameraAnim) {
+        cameraClip = clip;
+      } else {
+        modelClips.push(clip);
+      }
+    });
+
+    // === Animación de cámara (si existe)
+    if (cameraClip) {
+      const action = mixer.clipAction(cameraClip);
+      action.setLoop(THREE.LoopOnce);
+      action.clampWhenFinished = true;
+      action.play();
+    }
+
+    // === Animaciones del modelo
+    modelClips.forEach((clip) => {
+      const action = mixer.clipAction(clip);
+      action.setLoop(THREE.LoopOnce);
+      action.clampWhenFinished = true;
+      action.play();
+    });
   }
 });
 
@@ -204,13 +236,11 @@ function animate() {
 
 animate();
 
-// ========= RESIZE (también ajusta cámara GLB) =========
+// ========= RESIZE =========
 window.addEventListener("resize", () => {
-  // cámara normal
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
 
-  // cámara del modelo     // <<<
   if (cameraGLB) {
     cameraGLB.aspect = innerWidth / innerHeight;
     cameraGLB.updateProjectionMatrix();
