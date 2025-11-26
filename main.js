@@ -1,21 +1,44 @@
 // ======== IMPORTS (r129) ========
 import * as THREE from "https://cdn.skypack.dev/three@0.129.0/build/three.module.js";
-import { GLTFLoader } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/GLTFLoader.js";
-import { RGBELoader } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/RGBELoader.js";
-import { OrbitControls } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/controls/OrbitControls.js";
-import { Sky } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/objects/Sky.js";
+import {
+  GLTFLoader
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/GLTFLoader.js";
+import {
+  RGBELoader
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/RGBELoader.js";
+import {
+  OrbitControls
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/controls/OrbitControls.js";
+import {
+  Sky
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/objects/Sky.js";
 import Stats from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/libs/stats.module.js";
 
+// IMPORTANTE PARA RECTAREA LIGHT
+import {
+  RectAreaLightUniformsLib
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/lights/RectAreaLightUniformsLib.js";
+import {
+  RectAreaLightHelper
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/helpers/RectAreaLightHelper.js";
+
+RectAreaLightUniformsLib.init();
+
 // === POST-PROCESSING ===
-import { EffectComposer } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/UnrealBloomPass.js";
+import {
+  EffectComposer
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/EffectComposer.js";
+import {
+  RenderPass
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/RenderPass.js";
+import {
+  UnrealBloomPass
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/UnrealBloomPass.js";
 
 // ==========================================================
 // === CONFIGURACIÓN DE OBJETOS QUE PARPADEAN ===============
 // ==========================================================
-const colorConfigs = [
-  {
+const colorConfigs = [{
     name: "llanta_derecha",
     frameStart: 365,
     frameEnd: 430,
@@ -55,7 +78,7 @@ if (!container) throw new Error("Falta <div id='canvas-container'> en tu HTML");
 
 // ========= ESCENA =========
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xffffff);
+scene.background = new THREE.Color(0x242424);
 
 // ========= CÁMARA POR DEFECTO =========
 const camera = new THREE.PerspectiveCamera(
@@ -67,7 +90,9 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(0, 1, 7);
 
 // ========= RENDERER =========
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({
+  antialias: true
+});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 4));
 renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -114,7 +139,7 @@ new RGBELoader()
 // ========= CIELO =========
 const sky = new Sky();
 sky.scale.setScalar(450000);
-scene.add(sky);
+//scene.add(sky);
 
 const skyUniforms = sky.material.uniforms;
 skyUniforms["turbidity"].value = 20;
@@ -133,8 +158,8 @@ sun.setFromSphericalCoords(1, phi, theta);
 skyUniforms["sunPosition"].value.copy(sun);
 
 // ========= LUZ =========
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
-dirLight.position.set(7, 5.9, 17);
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.2);
+dirLight.position.set(0, 5.9, 0);
 dirLight.castShadow = true;
 
 dirLight.shadow.mapSize.width = 2048;
@@ -147,11 +172,61 @@ dirLight.shadow.camera.top = 30;
 dirLight.shadow.camera.bottom = -30;
 dirLight.shadow.bias = -0.0005;
 
-scene.add(dirLight);
+//scene.add(dirLight);
 
 // ========= HELPERS =========
 scene.add(new THREE.DirectionalLightHelper(dirLight, 0));
 scene.add(new THREE.CameraHelper(dirLight.shadow.camera));
+
+
+// =====================================================
+// ========= TUBO LED RECTANGULAR (NUEVO) ===============
+// =====================================================
+const tuboGeo = new THREE.BoxGeometry(0.1, 0.1, 2.5);
+const tuboMat = new THREE.MeshPhysicalMaterial({
+  color: new THREE.Color(1, 1, 1),
+  emissive: new THREE.Color(1, 1, 1),
+  emissiveIntensity: 12,
+  roughness: 0.1,
+  metalness: 0.0
+});
+
+const tuboLED = new THREE.Mesh(tuboGeo, tuboMat);
+tuboLED.position.set(0, 0, 0);
+
+
+// =====================================================
+// === CONTENEDOR PARA ROTAR TODO (TUBO + LUZ) =========
+// =====================================================
+const tuboHolder = new THREE.Object3D();
+tuboHolder.position.set(0, 2.5, 0); 
+scene.add(tuboHolder);
+
+tuboHolder.add(tuboLED);
+
+
+// =====================================================
+// =============== LUZ RECTANGULAR ======================
+// =====================================================
+const rectLight = new THREE.RectAreaLight(0xffffff, 25, 0.15, 2.5);
+
+rectLight.position.set(0, 0, 0);
+rectLight.lookAt(0, -1, 0);
+
+tuboHolder.add(rectLight);
+
+
+// =====================================================
+// ======= GIRAR TODO 90° EN EJE Y ======================
+// =====================================================
+tuboHolder.rotation.y = Math.PI / 2;
+
+
+// (opcional helper)
+const helper = new RectAreaLightHelper(rectLight);
+rectLight.add(helper);
+
+
 
 // ========= PISO =========
 const floorGeo = new THREE.PlaneGeometry(80, 70);
@@ -175,7 +250,7 @@ const ceramicMaterial = new THREE.MeshPhysicalMaterial({
   metalness: 0,
   roughnessMap,
   displacementMap,
-  displacementScale: 0.07,
+  displacementScale: 0.02,
   clearcoat: 0,
   clearcoatRoughness: 1
 });
@@ -286,7 +361,6 @@ function smoothBlink(cfg, frame, fps) {
   let phase = (localFrame % blinkDuration) / blinkDuration;
   let intensity = Math.sin(phase * Math.PI);
 
-  // — Mezcla correctamente el azul sobre el color original —
   cfg.mesh.material.color.copy(cfg.originalColor).lerp(cfg.colorAlt, intensity);
 }
 
@@ -298,7 +372,6 @@ function animate() {
   const delta = clock.getDelta();
   if (mixer) mixer.update(delta);
 
-  // === APLICAR PARPADEO POR FRAME ===
   if (mixer) {
     const tiempo = mixer.time;
     const fps = 24;
