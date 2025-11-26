@@ -10,7 +10,6 @@ import Stats from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/libs/stats
 import { EffectComposer } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { BokehPass } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/BokehPass.js";  // <--- DOF
 
 // ==========================================================
 // === SISTEMA DE CONFIGURACIÓN DE CAMBIO DE COLOR =========
@@ -20,7 +19,7 @@ const colorConfigs = [
     name: "llanta_derecha",
     frameStart: 365,
     frameEnd: 430,
-    colorBase: new THREE.Color(1, 1, 1),
+    colorBase: new THREE.Color(0, 0, 0),
     colorAlt: new THREE.Color(0, 0.2, 1),
     mesh: null
   },
@@ -70,7 +69,7 @@ camera.position.set(0, 1, 7);
 
 // ========= RENDERER =========
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 4));
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 renderer.shadowMap.enabled = true;
@@ -90,19 +89,12 @@ composer.addPass(renderPass);
 // Bloom
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.25,
+  0.2,
   0.4,
   0.0
 );
 composer.addPass(bloomPass);
 
-// === DOF (Desenfoque por distancia REAL) ===
-const bokehPass = new BokehPass(scene, camera, {
-  focus: 7,        // distancia en metros donde la cámara enfoca
-  aperture: 0.0003,  // intensidad del desenfoque
-  maxblur: 0.0      // máximo blur
-});
-composer.addPass(bokehPass);
 
 
 // ========= ORBIT CONTROLS =========
@@ -113,7 +105,7 @@ controls.target.set(0, 1, 0);
 controls.update();
 
 // ========= HDRI =========
-const esAndroid = /android/i.test(navigator.userAgent);
+const esAndroid = /andro/i.test(navigator.userAgent);
 
 if (!esAndroid) {
   const pmremGenerator = new THREE.PMREMGenerator(renderer);
@@ -239,7 +231,7 @@ gltfLoader.load("./scene.glb", (gltf) => {
     if (obj.isMesh && obj.material) {
       obj.castShadow = true;
       obj.receiveShadow = true;
-      obj.material.envMapIntensity = 0.3;
+      obj.material.envMapIntensity = 0.2;
     }
   });
 
