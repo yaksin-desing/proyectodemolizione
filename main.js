@@ -6,6 +6,45 @@ import { OrbitControls } from "https://cdn.skypack.dev/three@0.129.0/examples/js
 import { Sky } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/objects/Sky.js";
 import Stats from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/libs/stats.module.js";
 
+// ==========================================================
+// === SISTEMA DE CONFIGURACIÓN DE CAMBIO DE COLOR =========
+// ==========================================================
+// 3 parpadeos suaves
+const colorConfigs = [
+  {
+    name: "llanta_derecha",
+    frameStart: 365,
+    frameEnd: 430,  // más largo para 3 parpadeos suaves
+    colorBase: new THREE.Color(1, 1, 1),
+    colorAlt: new THREE.Color(0, 0.2, 1),
+    mesh: null
+  },
+  {
+    name: "rin_derecho",
+    frameStart: 365,
+    frameEnd: 430,
+    colorBase: new THREE.Color(1, 1, 1),
+    colorAlt: new THREE.Color(0, 0.2, 1),
+    mesh: null
+  },
+  {
+    name: "disco_derecho",
+    frameStart: 365,
+    frameEnd: 430,
+    colorBase: new THREE.Color(1, 1, 1),
+    colorAlt: new THREE.Color(0, 0.2, 1),
+    mesh: null
+  },
+  {
+    name: "pastilla_derecha",
+    frameStart: 365,
+    frameEnd: 430,
+    colorBase: new THREE.Color(1, 1, 1),
+    colorAlt: new THREE.Color(0, 0.2, 1),
+    mesh: null
+  }
+];
+
 // ========= CONTENEDOR =========
 const container = document.getElementById("canvas-container");
 if (!container) throw new Error("Falta <div id='canvas-container'> en tu HTML");
@@ -28,7 +67,6 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 
-// ACTIVAR SOMBRAS
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -41,7 +79,7 @@ controls.dampingFactor = 0.03;
 controls.target.set(0, 1, 0);
 controls.update();
 
-// ========= HDRI (NO en Android) =========
+// ========= HDRI =========
 const esAndroid = /android/i.test(navigator.userAgent);
 
 if (!esAndroid) {
@@ -49,7 +87,6 @@ if (!esAndroid) {
   pmremGenerator.compileEquirectangularShader();
 
   new RGBELoader()
-    .setPath("")
     .load("hdri.hdr", (hdrMap) => {
       const envMap = pmremGenerator.fromEquirectangular(hdrMap).texture;
       scene.environment = envMap;
@@ -57,8 +94,6 @@ if (!esAndroid) {
       hdrMap.dispose();
       pmremGenerator.dispose();
     });
-} else {
-  console.warn("HDRI desactivado en Android para mejorar rendimiento.");
 }
 
 // ========= CIELO =========
@@ -82,7 +117,7 @@ const theta = THREE.MathUtils.degToRad(azimuth);
 sun.setFromSphericalCoords(1, phi, theta);
 skyUniforms["sunPosition"].value.copy(sun);
 
-// ========= LUZ PRINCIPAL =========
+// ========= LUZ =========
 const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
 dirLight.position.set(10, 20, 10);
 dirLight.castShadow = true;
@@ -103,7 +138,7 @@ scene.add(dirLight);
 scene.add(new THREE.DirectionalLightHelper(dirLight, 0));
 scene.add(new THREE.CameraHelper(dirLight.shadow.camera));
 
-// ========= PISO CERÁMICO =========
+// ========= PISO =========
 const floorGeo = new THREE.PlaneGeometry(80, 70);
 const textureLoader = new THREE.TextureLoader();
 
@@ -127,9 +162,7 @@ const ceramicMaterial = new THREE.MeshPhysicalMaterial({
   displacementMap,
   displacementScale: 0.07,
   clearcoat: 0,
-  clearcoatRoughness: 1,
-  transparent: false,
-  opacity: 1
+  clearcoatRoughness: 1
 });
 
 ceramicMaterial.envMapIntensity = 0.7;
@@ -140,7 +173,7 @@ ceramicLayer.position.y = -0.1;
 ceramicLayer.receiveShadow = true;
 scene.add(ceramicLayer);
 
-// ========= CARGA MODELO + CÁMARA GLB =========
+// ========= CARGA MODELO =========
 const gltfLoader = new GLTFLoader();
 let mixer = null;
 let cameraGLB = null;
@@ -150,13 +183,19 @@ gltfLoader.load("./scene.glb", (gltf) => {
   const root = gltf.scene;
   scene.add(root);
 
+  // === VINCULAR PIEZAS POR NOMBRE ===
+  colorConfigs.forEach(cfg => {
+    const obj = root.getObjectByName(cfg.name);
+    if (obj) cfg.mesh = obj;
+    else console.warn("No se encontró objeto:", cfg.name);
+  });
+
   // Detectar cámara del GLB
   root.traverse((obj) => {
     if (obj.isCamera) {
       cameraGLB = obj;
       controls.enabled = false;
 
-      // Ajustes de cámara GLB
       cameraGLB.fov = 75;
       cameraGLB.aspect = window.innerWidth / window.innerHeight;
       cameraGLB.near = 0.1;
@@ -164,38 +203,29 @@ gltfLoader.load("./scene.glb", (gltf) => {
       cameraGLB.updateProjectionMatrix();
     }
 
-    if (obj.isMesh) {
+    if (obj.isMesh && obj.material) {
       obj.castShadow = true;
       obj.receiveShadow = true;
-
-      if (obj.material) {
-        obj.material.envMapIntensity = 0.5;
-        obj.material.needsUpdate = true;
-      }
+      obj.material.envMapIntensity = 0.5;
     }
   });
 
-  // ========= ANIMACIONES SEPARADAS =========
+  // ========= ANIMACIONES =========
   if (gltf.animations.length > 0) {
     mixer = new THREE.AnimationMixer(root);
 
     let cameraClip = null;
     let modelClips = [];
 
-    // Clasificar animaciones por tipo
     gltf.animations.forEach((clip) => {
       const isCameraAnim = clip.tracks.some(t =>
         t.name.toLowerCase().includes("camera")
       );
 
-      if (isCameraAnim) {
-        cameraClip = clip;
-      } else {
-        modelClips.push(clip);
-      }
+      if (isCameraAnim) cameraClip = clip;
+      else modelClips.push(clip);
     });
 
-    // === Animación de cámara (si existe)
     if (cameraClip) {
       const action = mixer.clipAction(cameraClip);
       action.setLoop(THREE.LoopOnce);
@@ -203,7 +233,6 @@ gltfLoader.load("./scene.glb", (gltf) => {
       action.play();
     }
 
-    // === Animaciones del modelo
     modelClips.forEach((clip) => {
       const action = mixer.clipAction(clip);
       action.setLoop(THREE.LoopOnce);
@@ -218,19 +247,62 @@ const stats = new Stats();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);
 
+// =====================================================
+// === FUNCIÓN: 3 PARPADEOS SUAVES =====================
+// =====================================================
+function smoothBlink(cfg, frame, fps) {
+
+  const durationFrames = cfg.frameEnd - cfg.frameStart; 
+  const totalBlinks = 3;
+
+  const blinkDuration = durationFrames / totalBlinks;  
+
+  const localFrame = frame - cfg.frameStart;
+  let blinkIndex = Math.floor(localFrame / blinkDuration);
+
+  if (blinkIndex >= totalBlinks) {
+    cfg.mesh.material.color.copy(cfg.colorBase);
+    return;
+  }
+
+  let phase = (localFrame % blinkDuration) / blinkDuration;
+
+  // Suave: 0→1→0 usando curva senoidal
+  let intensity = Math.sin(phase * Math.PI);
+
+  cfg.mesh.material.color.copy(cfg.colorBase).lerp(cfg.colorAlt, intensity);
+}
+
 // ========= LOOP =========
 function animate() {
   stats.begin();
-
   requestAnimationFrame(animate);
 
   const delta = clock.getDelta();
   if (mixer) mixer.update(delta);
 
+  // ======================================================
+  // === CAMBIO DE COLOR POR FRAME ========================
+  // ======================================================
+  if (mixer) {
+    const tiempo = mixer.time;
+    const fps = 24;
+    const frame = Math.floor(tiempo * fps);
+
+    colorConfigs.forEach(cfg => {
+      if (!cfg.mesh || !cfg.mesh.material) return;
+
+      if (frame >= cfg.frameStart && frame <= cfg.frameEnd) {
+        smoothBlink(cfg, frame, fps);
+      } else {
+        cfg.mesh.material.color.copy(cfg.colorBase);
+      }
+    });
+  }
+
   if (!cameraGLB) controls.update();
 
   renderer.render(scene, cameraGLB || camera);
-
   stats.end();
 }
 
