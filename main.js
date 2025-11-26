@@ -12,43 +12,42 @@ import { RenderPass } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/p
 import { UnrealBloomPass } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/UnrealBloomPass.js";
 
 // ==========================================================
-// === SISTEMA DE CONFIGURACIÓN DE CAMBIO DE COLOR =========
+// === CONFIGURACIÓN DE OBJETOS QUE PARPADEAN ===============
 // ==========================================================
 const colorConfigs = [
   {
     name: "llanta_derecha",
     frameStart: 365,
     frameEnd: 430,
-    colorBase: new THREE.Color(0, 0, 0),
     colorAlt: new THREE.Color(0, 0.2, 1),
-    mesh: null
+    mesh: null,
+    originalColor: null
   },
   {
     name: "rin_derecho",
     frameStart: 365,
     frameEnd: 430,
-    colorBase: new THREE.Color(1, 1, 1),
     colorAlt: new THREE.Color(0, 0.2, 1),
-    mesh: null
+    mesh: null,
+    originalColor: null
   },
   {
     name: "disco_derecho",
     frameStart: 365,
     frameEnd: 430,
-    colorBase: new THREE.Color(1, 1, 1),
     colorAlt: new THREE.Color(0, 0.2, 1),
-    mesh: null
+    mesh: null,
+    originalColor: null
   },
   {
     name: "pastilla_derecha",
     frameStart: 365,
     frameEnd: 430,
-    colorBase: new THREE.Color(1, 1, 1),
     colorAlt: new THREE.Color(0, 0.2, 1),
-    mesh: null
+    mesh: null,
+    originalColor: null
   }
 ];
-
 
 // ========= CONTENEDOR =========
 const container = document.getElementById("canvas-container");
@@ -78,24 +77,19 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 container.appendChild(renderer.domElement);
 
 // =====================================================
-// === POST-PROCESSING: BLOOM + DOF ====================
+// === POST-PROCESSING =================================
 // =====================================================
 const composer = new EffectComposer(renderer);
-
-// Render base
 const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
 
-// Bloom
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
   0.2,
   0.4,
   0.0
 );
-composer.addPass(bloomPass);
-
-
+// composer.addPass(bloomPass);
 
 // ========= ORBIT CONTROLS =========
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -105,21 +99,17 @@ controls.target.set(0, 1, 0);
 controls.update();
 
 // ========= HDRI =========
-const esAndroid = /android/i.test(navigator.userAgent);
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+pmremGenerator.compileEquirectangularShader();
 
-// if (!esAndroid) {
-  const pmremGenerator = new THREE.PMREMGenerator(renderer);
-  pmremGenerator.compileEquirectangularShader();
+new RGBELoader()
+  .load("hdri.hdr", (hdrMap) => {
+    const envMap = pmremGenerator.fromEquirectangular(hdrMap).texture;
+    scene.environment = envMap;
 
-  new RGBELoader()
-    .load("hdri.hdr", (hdrMap) => {
-      const envMap = pmremGenerator.fromEquirectangular(hdrMap).texture;
-      scene.environment = envMap;
-
-      hdrMap.dispose();
-      pmremGenerator.dispose();
-    });
-// }
+    hdrMap.dispose();
+    pmremGenerator.dispose();
+  });
 
 // ========= CIELO =========
 const sky = new Sky();
@@ -208,14 +198,18 @@ gltfLoader.load("./scene.glb", (gltf) => {
   const root = gltf.scene;
   scene.add(root);
 
-  // === VINCULAR OBJETOS POR NOMBRE ===
+  // === ENLAZAR OBJETOS Y GUARDAR COLOR ORIGINAL ===
   colorConfigs.forEach(cfg => {
     const obj = root.getObjectByName(cfg.name);
-    if (obj) cfg.mesh = obj;
-    else console.warn("No se encontró objeto:", cfg.name);
+    if (obj) {
+      cfg.mesh = obj;
+      cfg.originalColor = obj.material.color.clone(); // ← IMPORTANTE
+    } else {
+      console.warn("No se encontró objeto:", cfg.name);
+    }
   });
 
-  // Detectar cámara del GLB
+  // Detectar cámara GLB
   root.traverse((obj) => {
     if (obj.isCamera) {
       cameraGLB = obj;
@@ -231,11 +225,11 @@ gltfLoader.load("./scene.glb", (gltf) => {
     if (obj.isMesh && obj.material) {
       obj.castShadow = true;
       obj.receiveShadow = true;
-      obj.material.envMapIntensity = 0.2;
+      obj.material.envMapIntensity = 0.7;
     }
   });
 
-  // ========= ANIMACIONES =========
+  // Animaciones
   if (gltf.animations.length > 0) {
     mixer = new THREE.AnimationMixer(root);
 
@@ -273,31 +267,28 @@ stats.showPanel(0);
 document.body.appendChild(stats.dom);
 
 // =====================================================
-// === FUNCIÓN: 3 PARPADEOS SUAVES =====================
+// === PARPADEO AZUL SOBRE COLOR ORIGINAL ==============
 // =====================================================
 function smoothBlink(cfg, frame, fps) {
 
-  const durationFrames = cfg.frameEnd - cfg.frameStart; 
+  const durationFrames = cfg.frameEnd - cfg.frameStart;
   const totalBlinks = 3;
-
-  const blinkDuration = durationFrames / totalBlinks;  
+  const blinkDuration = durationFrames / totalBlinks;
 
   const localFrame = frame - cfg.frameStart;
   let blinkIndex = Math.floor(localFrame / blinkDuration);
 
   if (blinkIndex >= totalBlinks) {
-    cfg.mesh.material.color.copy(cfg.colorBase);
+    cfg.mesh.material.color.copy(cfg.originalColor);
     return;
   }
 
   let phase = (localFrame % blinkDuration) / blinkDuration;
-
   let intensity = Math.sin(phase * Math.PI);
 
-  cfg.mesh.material.color.copy(cfg.colorBase).lerp(cfg.colorAlt, intensity);
+  // — Mezcla correctamente el azul sobre el color original —
+  cfg.mesh.material.color.copy(cfg.originalColor).lerp(cfg.colorAlt, intensity);
 }
-
-
 
 // ========= LOOP =========
 function animate() {
@@ -307,7 +298,7 @@ function animate() {
   const delta = clock.getDelta();
   if (mixer) mixer.update(delta);
 
-  // === CAMBIO DE COLOR POR FRAME =======
+  // === APLICAR PARPADEO POR FRAME ===
   if (mixer) {
     const tiempo = mixer.time;
     const fps = 24;
@@ -319,25 +310,20 @@ function animate() {
       if (frame >= cfg.frameStart && frame <= cfg.frameEnd) {
         smoothBlink(cfg, frame, fps);
       } else {
-        cfg.mesh.material.color.copy(cfg.colorBase);
+        cfg.mesh.material.color.copy(cfg.originalColor);
       }
     });
   }
 
-  // === Actualizar controles si no hay cámara GLB ===
   if (!cameraGLB) controls.update();
 
-  // === Aplicar cámara activa ===
   renderPass.camera = cameraGLB || camera;
-
-  // === POST-PROCESSING RENDER ===
   composer.render();
 
   stats.end();
 }
 
 animate();
-
 
 // ========= RESIZE =========
 window.addEventListener("resize", () => {
@@ -352,8 +338,4 @@ window.addEventListener("resize", () => {
   renderer.setSize(innerWidth, innerHeight);
   composer.setSize(innerWidth, innerHeight);
   bloomPass.setSize(innerWidth, innerHeight);
-
-  // === NECESARIO PARA EL DOF ===
-  bokehPass.renderTargetDepth.setSize(innerWidth, innerHeight);
-  bokehPass.renderTargetColor.setSize(innerWidth, innerHeight);
 });
