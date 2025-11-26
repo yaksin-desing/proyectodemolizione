@@ -105,9 +105,9 @@ controls.target.set(0, 1, 0);
 controls.update();
 
 // ========= HDRI =========
-const esAndroid = /andro/i.test(navigator.userAgent);
+const esAndroid = /android/i.test(navigator.userAgent);
 
-if (!esAndroid) {
+// if (!esAndroid) {
   const pmremGenerator = new THREE.PMREMGenerator(renderer);
   pmremGenerator.compileEquirectangularShader();
 
@@ -119,7 +119,7 @@ if (!esAndroid) {
       hdrMap.dispose();
       pmremGenerator.dispose();
     });
-}
+// }
 
 // ========= CIELO =========
 const sky = new Sky();
