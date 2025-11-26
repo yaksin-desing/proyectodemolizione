@@ -6,15 +6,20 @@ import { OrbitControls } from "https://cdn.skypack.dev/three@0.129.0/examples/js
 import { Sky } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/objects/Sky.js";
 import Stats from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/libs/stats.module.js";
 
+// === POST-PROCESSING ===
+import { EffectComposer } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { BokehPass } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/BokehPass.js";  // <--- DOF
+
 // ==========================================================
 // === SISTEMA DE CONFIGURACIÓN DE CAMBIO DE COLOR =========
 // ==========================================================
-// 3 parpadeos suaves
 const colorConfigs = [
   {
     name: "llanta_derecha",
     frameStart: 365,
-    frameEnd: 430,  // más largo para 3 parpadeos suaves
+    frameEnd: 430,
     colorBase: new THREE.Color(1, 1, 1),
     colorAlt: new THREE.Color(0, 0.2, 1),
     mesh: null
@@ -45,6 +50,7 @@ const colorConfigs = [
   }
 ];
 
+
 // ========= CONTENEDOR =========
 const container = document.getElementById("canvas-container");
 if (!container) throw new Error("Falta <div id='canvas-container'> en tu HTML");
@@ -71,6 +77,33 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 container.appendChild(renderer.domElement);
+
+// =====================================================
+// === POST-PROCESSING: BLOOM + DOF ====================
+// =====================================================
+const composer = new EffectComposer(renderer);
+
+// Render base
+const renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
+
+// Bloom
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  0.25,
+  0.4,
+  0.0
+);
+composer.addPass(bloomPass);
+
+// === DOF (Desenfoque por distancia REAL) ===
+const bokehPass = new BokehPass(scene, camera, {
+  focus: 7,        // distancia en metros donde la cámara enfoca
+  aperture: 0.0003,  // intensidad del desenfoque
+  maxblur: 0.0      // máximo blur
+});
+composer.addPass(bokehPass);
+
 
 // ========= ORBIT CONTROLS =========
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -119,7 +152,7 @@ skyUniforms["sunPosition"].value.copy(sun);
 
 // ========= LUZ =========
 const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
-dirLight.position.set(10, 20, 10);
+dirLight.position.set(7, 5.9, 17);
 dirLight.castShadow = true;
 
 dirLight.shadow.mapSize.width = 2048;
@@ -156,7 +189,7 @@ roughnessMap.repeat.set(5, 5);
 
 const ceramicMaterial = new THREE.MeshPhysicalMaterial({
   color: new THREE.Color(1, 1, 1),
-  roughness: 0.3,
+  roughness: 1,
   metalness: 0,
   roughnessMap,
   displacementMap,
@@ -165,7 +198,7 @@ const ceramicMaterial = new THREE.MeshPhysicalMaterial({
   clearcoatRoughness: 1
 });
 
-ceramicMaterial.envMapIntensity = 0.7;
+ceramicMaterial.envMapIntensity = 0.5;
 
 const ceramicLayer = new THREE.Mesh(floorGeo, ceramicMaterial);
 ceramicLayer.rotation.x = -Math.PI / 2;
@@ -183,7 +216,7 @@ gltfLoader.load("./scene.glb", (gltf) => {
   const root = gltf.scene;
   scene.add(root);
 
-  // === VINCULAR PIEZAS POR NOMBRE ===
+  // === VINCULAR OBJETOS POR NOMBRE ===
   colorConfigs.forEach(cfg => {
     const obj = root.getObjectByName(cfg.name);
     if (obj) cfg.mesh = obj;
@@ -206,7 +239,7 @@ gltfLoader.load("./scene.glb", (gltf) => {
     if (obj.isMesh && obj.material) {
       obj.castShadow = true;
       obj.receiveShadow = true;
-      obj.material.envMapIntensity = 0.5;
+      obj.material.envMapIntensity = 0.3;
     }
   });
 
@@ -267,11 +300,12 @@ function smoothBlink(cfg, frame, fps) {
 
   let phase = (localFrame % blinkDuration) / blinkDuration;
 
-  // Suave: 0→1→0 usando curva senoidal
   let intensity = Math.sin(phase * Math.PI);
 
   cfg.mesh.material.color.copy(cfg.colorBase).lerp(cfg.colorAlt, intensity);
 }
+
+
 
 // ========= LOOP =========
 function animate() {
@@ -281,9 +315,7 @@ function animate() {
   const delta = clock.getDelta();
   if (mixer) mixer.update(delta);
 
-  // ======================================================
-  // === CAMBIO DE COLOR POR FRAME ========================
-  // ======================================================
+  // === CAMBIO DE COLOR POR FRAME =======
   if (mixer) {
     const tiempo = mixer.time;
     const fps = 24;
@@ -300,13 +332,20 @@ function animate() {
     });
   }
 
+  // === Actualizar controles si no hay cámara GLB ===
   if (!cameraGLB) controls.update();
 
-  renderer.render(scene, cameraGLB || camera);
+  // === Aplicar cámara activa ===
+  renderPass.camera = cameraGLB || camera;
+
+  // === POST-PROCESSING RENDER ===
+  composer.render();
+
   stats.end();
 }
 
 animate();
+
 
 // ========= RESIZE =========
 window.addEventListener("resize", () => {
@@ -319,4 +358,10 @@ window.addEventListener("resize", () => {
   }
 
   renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+  bloomPass.setSize(innerWidth, innerHeight);
+
+  // === NECESARIO PARA EL DOF ===
+  bokehPass.renderTargetDepth.setSize(innerWidth, innerHeight);
+  bokehPass.renderTargetColor.setSize(innerWidth, innerHeight);
 });
