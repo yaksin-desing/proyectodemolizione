@@ -356,9 +356,12 @@ gltfLoader.load("./scene.glb", (gltf) => {
   if (gltf.animations.length > 0) {
     mixer = new THREE.AnimationMixer(root);
 
+    let cameraAction = null;
+    let modelActions = [];
     let cameraClip = null;
     let modelClips = [];
 
+    // Separar animaciones de cámara y modelo
     gltf.animations.forEach((clip) => {
       const isCameraAnim = clip.tracks.some(t =>
         t.name.toLowerCase().includes("camera")
@@ -368,20 +371,34 @@ gltfLoader.load("./scene.glb", (gltf) => {
       else modelClips.push(clip);
     });
 
+    // === ANIMACIÓN DE LA CÁMARA (ES LA QUE CONTROLA TODO) ===
     if (cameraClip) {
-      const action = mixer.clipAction(cameraClip);
-      action.setLoop(THREE.LoopOnce);
-      action.clampWhenFinished = true;
-      action.play();
+      cameraAction = mixer.clipAction(cameraClip);
+      cameraAction.setLoop(THREE.LoopRepeat);  // Solo ella hace loop
+      cameraAction.clampWhenFinished = false;
+      cameraAction.play();
     }
 
+    // === ANIMACIONES DEL MODELO (UNA SOLA VEZ, PERO LUEGO SE REINICIAN MANUALMENTE) ===
     modelClips.forEach((clip) => {
       const action = mixer.clipAction(clip);
       action.setLoop(THREE.LoopOnce);
-      action.clampWhenFinished = true;
+      action.clampWhenFinished = false;
       action.play();
+      modelActions.push(action);
     });
-  }
+
+    // === SINCRONIZAR MODELO CUANDO LA CÁMARA LOOP ===
+    mixer.addEventListener("loop", (e) => {
+      if (e.action === cameraAction) {
+        // Reiniciar TODAS las animaciones del modelo
+        modelActions.forEach(a => {
+          a.reset();
+          a.play();
+        });
+      }
+    });
+}
 });
 
 
