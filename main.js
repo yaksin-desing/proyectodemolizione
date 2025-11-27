@@ -1,44 +1,30 @@
 // ======== IMPORTS (r129) ========
 import * as THREE from "https://cdn.skypack.dev/three@0.129.0/build/three.module.js";
-import {
-  GLTFLoader
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/GLTFLoader.js";
-import {
-  RGBELoader
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/RGBELoader.js";
-import {
-  OrbitControls
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/controls/OrbitControls.js";
-import {
-  Sky
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/objects/Sky.js";
+import { GLTFLoader } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/GLTFLoader.js";
+import { RGBELoader } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/RGBELoader.js";
+import { OrbitControls } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/controls/OrbitControls.js";
+import { Sky } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/objects/Sky.js";
 import Stats from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/libs/stats.module.js";
 
-// IMPORTANTE PARA RECTAREA LIGHT
-import {
-  RectAreaLightUniformsLib
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/lights/RectAreaLightUniformsLib.js";
-import {
-  RectAreaLightHelper
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/helpers/RectAreaLightHelper.js";
+import { RectAreaLightUniformsLib } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/lights/RectAreaLightUniformsLib.js";
+import { RectAreaLightHelper } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/helpers/RectAreaLightHelper.js";
+
+// *** REFLECTOR ***
+import { Reflector } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/objects/Reflector.js";
 
 RectAreaLightUniformsLib.init();
 
 // === POST-PROCESSING ===
-import {
-  EffectComposer
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/EffectComposer.js";
-import {
-  RenderPass
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/RenderPass.js";
-import {
-  UnrealBloomPass
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { EffectComposer } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/UnrealBloomPass.js";
+
 
 // ==========================================================
 // === CONFIGURACIÓN DE OBJETOS QUE PARPADEAN ===============
 // ==========================================================
-const colorConfigs = [{
+const colorConfigs = [
+  {
     name: "llanta_derecha",
     frameStart: 365,
     frameEnd: 430,
@@ -72,15 +58,18 @@ const colorConfigs = [{
   }
 ];
 
+
 // ========= CONTENEDOR =========
 const container = document.getElementById("canvas-container");
 if (!container) throw new Error("Falta <div id='canvas-container'> en tu HTML");
+
 
 // ========= ESCENA =========
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x242424);
 
-// ========= CÁMARA POR DEFECTO =========
+
+// ========= CÁMARA =========
 const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
@@ -89,10 +78,9 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(0, 1, 7);
 
+
 // ========= RENDERER =========
-const renderer = new THREE.WebGLRenderer({
-  antialias: true
-});
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 4));
 renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -100,6 +88,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 container.appendChild(renderer.domElement);
+
 
 // =====================================================
 // === POST-PROCESSING =================================
@@ -114,7 +103,8 @@ const bloomPass = new UnrealBloomPass(
   0.4,
   0.0
 );
-// composer.addPass(bloomPass);
+composer.addPass(bloomPass);
+
 
 // ========= ORBIT CONTROLS =========
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -123,23 +113,23 @@ controls.dampingFactor = 0.03;
 controls.target.set(0, 1, 0);
 controls.update();
 
+
 // ========= HDRI =========
 const pmremGenerator = new THREE.PMREMGenerator(renderer);
 pmremGenerator.compileEquirectangularShader();
 
-new RGBELoader()
-  .load("hdri.hdr", (hdrMap) => {
-    const envMap = pmremGenerator.fromEquirectangular(hdrMap).texture;
-    scene.environment = envMap;
+new RGBELoader().load("hdr.hdr", (hdrMap) => {
+  const envMap = pmremGenerator.fromEquirectangular(hdrMap).texture;
+  scene.environment = envMap;
 
-    hdrMap.dispose();
-    pmremGenerator.dispose();
-  });
+  hdrMap.dispose();
+  pmremGenerator.dispose();
+});
+
 
 // ========= CIELO =========
 const sky = new Sky();
 sky.scale.setScalar(450000);
-//scene.add(sky);
 
 const skyUniforms = sky.material.uniforms;
 skyUniforms["turbidity"].value = 20;
@@ -157,30 +147,18 @@ const theta = THREE.MathUtils.degToRad(azimuth);
 sun.setFromSphericalCoords(1, phi, theta);
 skyUniforms["sunPosition"].value.copy(sun);
 
-// ========= LUZ =========
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.2);
-dirLight.position.set(0, 5.9, 0);
-dirLight.castShadow = true;
-
-dirLight.shadow.mapSize.width = 2048;
-dirLight.shadow.mapSize.height = 2048;
-dirLight.shadow.camera.near = 0.5;
-dirLight.shadow.camera.far = 150;
-dirLight.shadow.camera.left = -30;
-dirLight.shadow.camera.right = 30;
-dirLight.shadow.camera.top = 30;
-dirLight.shadow.camera.bottom = -30;
-dirLight.shadow.bias = -0.0005;
-
-//scene.add(dirLight);
-
-// ========= HELPERS =========
-scene.add(new THREE.DirectionalLightHelper(dirLight, 0));
-scene.add(new THREE.CameraHelper(dirLight.shadow.camera));
+// =====================================================
+// ========== ELIMINAR LUZ DIRECCIONAL =================
+// =====================================================
+// ❌ Ya no usamos DirectionalLight para sombras
+// ❌ Se elimina todo el bloque anterior
+//     dirLight.castShadow = true
+//     scene.add(dirLight);
+// =====================================================
 
 
 // =====================================================
-// ========= TUBO LED RECTANGULAR (NUEVO) ===============
+// ========= TUBO LED (MATERIAL EMISIVO) ===============
 // =====================================================
 const tuboGeo = new THREE.BoxGeometry(0.1, 0.1, 2.5);
 const tuboMat = new THREE.MeshPhysicalMaterial({
@@ -192,39 +170,52 @@ const tuboMat = new THREE.MeshPhysicalMaterial({
 });
 
 const tuboLED = new THREE.Mesh(tuboGeo, tuboMat);
-tuboLED.position.set(0, 0, 0);
+tuboLED.castShadow = true;       // 🔥 El tubo proyecta sombras al tener luz interna
+tuboLED.receiveShadow = false;
 
 
 // =====================================================
-// === CONTENEDOR PARA ROTAR TODO (TUBO + LUZ) =========
+// ===== CONTENEDOR PARA ROTAR TUBO + LUZ ===============
 // =====================================================
 const tuboHolder = new THREE.Object3D();
-tuboHolder.position.set(0, 2.5, 0); 
+tuboHolder.position.set(0, 2.5, 0);
 scene.add(tuboHolder);
 
 tuboHolder.add(tuboLED);
 
 
 // =====================================================
-// =============== LUZ RECTANGULAR ======================
+// === RECTANGULAR LIGHT (solo efecto visual) ==========
 // =====================================================
+// ❗ RecAreaLight no genera sombras en THREE.JS
+// ❗ La mantenemos porque ilumina muy bien la escena
 const rectLight = new THREE.RectAreaLight(0xffffff, 25, 0.15, 2.5);
-
 rectLight.position.set(0, 0, 0);
 rectLight.lookAt(0, -1, 0);
-
 tuboHolder.add(rectLight);
 
 
 // =====================================================
-// ======= GIRAR TODO 90° EN EJE Y ======================
+// ===== LUZ REAL INTERNA QUE SÍ GENERA SOMBRAS =========
+// =====================================================
+// ✔ Esta luz es la que realmente proyecta las sombras
+// ✔ Muy suave para simular luminosidad del LED real
+const pointLED = new THREE.PointLight(0xffffff, 1.8, 6);
+pointLED.castShadow = true;
+pointLED.shadow.mapSize.width = 2048;
+pointLED.shadow.mapSize.height = 2048;
+pointLED.shadow.bias = -0.0005;
+
+// Colocarla exactamente dentro del tubo
+pointLED.position.set(0, 0, 0);
+
+tuboHolder.add(pointLED);
+
+
+// =====================================================
+// ===== ROTACIÓN DEL TUBO (OPCIONAL) ===================
 // =====================================================
 tuboHolder.rotation.y = Math.PI / 2;
-
-
-// (opcional helper)
-const helper = new RectAreaLightHelper(rectLight);
-rectLight.add(helper);
 
 
 
@@ -245,23 +236,44 @@ roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping;
 roughnessMap.repeat.set(5, 5);
 
 const ceramicMaterial = new THREE.MeshPhysicalMaterial({
-  color: new THREE.Color(1, 1, 1),
-  roughness: 1,
-  metalness: 0,
+  color: new THREE.Color(0, 0, 0),
+  roughness: 0.9,
+  metalness: 0.7,
   roughnessMap,
   displacementMap,
   displacementScale: 0.02,
+  transparent: true,
+  opacity: 0.65,
   clearcoat: 0,
   clearcoatRoughness: 1
 });
 
-ceramicMaterial.envMapIntensity = 0.5;
+ceramicMaterial.envMapIntensity = 0.7;
 
 const ceramicLayer = new THREE.Mesh(floorGeo, ceramicMaterial);
 ceramicLayer.rotation.x = -Math.PI / 2;
 ceramicLayer.position.y = -0.1;
 ceramicLayer.receiveShadow = true;
 scene.add(ceramicLayer);
+
+
+// =====================================================
+// ================= REFLECTOR (REEMPLAZA AGUA) ========
+// =====================================================
+const reflectorGeo = new THREE.PlaneGeometry(80, 70);
+
+const reflector = new Reflector(reflectorGeo, {
+  clipBias: 0.003,
+  textureWidth: window.innerWidth * devicePixelRatio,
+  textureHeight: window.innerHeight * devicePixelRatio,
+  color: 0x222222
+});
+
+reflector.rotation.x = -Math.PI / 2;
+reflector.position.y = -0.12;
+
+scene.add(reflector);
+
 
 // ========= CARGA MODELO =========
 const gltfLoader = new GLTFLoader();
@@ -273,18 +285,14 @@ gltfLoader.load("./scene.glb", (gltf) => {
   const root = gltf.scene;
   scene.add(root);
 
-  // === ENLAZAR OBJETOS Y GUARDAR COLOR ORIGINAL ===
   colorConfigs.forEach(cfg => {
     const obj = root.getObjectByName(cfg.name);
     if (obj) {
       cfg.mesh = obj;
-      cfg.originalColor = obj.material.color.clone(); // ← IMPORTANTE
-    } else {
-      console.warn("No se encontró objeto:", cfg.name);
+      cfg.originalColor = obj.material.color.clone();
     }
   });
 
-  // Detectar cámara GLB
   root.traverse((obj) => {
     if (obj.isCamera) {
       cameraGLB = obj;
@@ -304,7 +312,6 @@ gltfLoader.load("./scene.glb", (gltf) => {
     }
   });
 
-  // Animaciones
   if (gltf.animations.length > 0) {
     mixer = new THREE.AnimationMixer(root);
 
@@ -336,16 +343,17 @@ gltfLoader.load("./scene.glb", (gltf) => {
   }
 });
 
+
 // ========= STATS =========
 const stats = new Stats();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);
 
+
 // =====================================================
 // === PARPADEO AZUL SOBRE COLOR ORIGINAL ==============
 // =====================================================
 function smoothBlink(cfg, frame, fps) {
-
   const durationFrames = cfg.frameEnd - cfg.frameStart;
   const totalBlinks = 3;
   const blinkDuration = durationFrames / totalBlinks;
@@ -363,6 +371,7 @@ function smoothBlink(cfg, frame, fps) {
 
   cfg.mesh.material.color.copy(cfg.originalColor).lerp(cfg.colorAlt, intensity);
 }
+
 
 // ========= LOOP =========
 function animate() {
@@ -397,6 +406,7 @@ function animate() {
 }
 
 animate();
+
 
 // ========= RESIZE =========
 window.addEventListener("resize", () => {
