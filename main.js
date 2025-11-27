@@ -66,7 +66,7 @@ if (!container) throw new Error("Falta <div id='canvas-container'> en tu HTML");
 
 // ========= ESCENA =========
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x242424);
+scene.background = new THREE.Color(0x000000);
 
 
 // ========= CÁMARA =========
@@ -81,7 +81,7 @@ camera.position.set(0, 1, 7);
 
 // ========= RENDERER =========
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 4));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 renderer.shadowMap.enabled = true;
@@ -103,7 +103,7 @@ const bloomPass = new UnrealBloomPass(
   0.4,
   0.0
 );
-composer.addPass(bloomPass);
+//composer.addPass(bloomPass);
 
 
 // ========= ORBIT CONTROLS =========
@@ -120,7 +120,7 @@ pmremGenerator.compileEquirectangularShader();
 
 new RGBELoader().load("hdr.hdr", (hdrMap) => {
   const envMap = pmremGenerator.fromEquirectangular(hdrMap).texture;
-  scene.environment = envMap;
+  scene.environment = null;
 
   hdrMap.dispose();
   pmremGenerator.dispose();
@@ -158,64 +158,105 @@ skyUniforms["sunPosition"].value.copy(sun);
 
 
 // =====================================================
-// ========= TUBO LED (MATERIAL EMISIVO) ===============
+// ========== CREAR 7 LÁMPARAS LED ======================
 // =====================================================
-const tuboGeo = new THREE.BoxGeometry(0.1, 0.1, 2.5);
+
+// --- GEOMETRÍA Y MATERIAL COMPARTIDOS ---
+const tuboGeo = new THREE.BoxGeometry(0.1, 0.1, 4);
 const tuboMat = new THREE.MeshPhysicalMaterial({
   color: new THREE.Color(1, 1, 1),
   emissive: new THREE.Color(1, 1, 1),
-  emissiveIntensity: 12,
+  emissiveIntensity: 20,
   roughness: 0.1,
   metalness: 0.0
 });
 
-const tuboLED = new THREE.Mesh(tuboGeo, tuboMat);
-tuboLED.castShadow = true;       // 🔥 El tubo proyecta sombras al tener luz interna
-tuboLED.receiveShadow = false;
+// --- FUNCIÓN QUE CREA UNA LÁMPARA COMPLETA ---
+function crearLampara() {
+  const holder = new THREE.Object3D();
 
+  // --- TUBO LED ---
+  const tuboLED = new THREE.Mesh(tuboGeo, tuboMat);
+  tuboLED.castShadow = false;
+  holder.add(tuboLED);
 
-// =====================================================
-// ===== CONTENEDOR PARA ROTAR TUBO + LUZ ===============
-// =====================================================
-const tuboHolder = new THREE.Object3D();
-tuboHolder.position.set(0, 2.5, 0);
-scene.add(tuboHolder);
+  // --- LUZ RECTANGULAR ---
+  const rectLight = new THREE.RectAreaLight(0xffffff, 20, 0.15, 2.5);
+  rectLight.position.set(0, 0, 0);
+  rectLight.lookAt(0, -1, 0);
+  holder.add(rectLight);
 
-tuboHolder.add(tuboLED);
+  // --- LUZ REAL INTERNA (CON SOMBRAS) ---
+  const pointLED = new THREE.PointLight(0xffffff, 4, 12);
+  pointLED.castShadow = false;
+  pointLED.shadow.mapSize.width = 2048;
+  pointLED.shadow.mapSize.height = 2048;
+  pointLED.shadow.bias = -0.0005;
+  pointLED.position.set(0, 0, 0);
+  holder.add(pointLED);
 
-
-// =====================================================
-// === RECTANGULAR LIGHT (solo efecto visual) ==========
-// =====================================================
-// ❗ RecAreaLight no genera sombras en THREE.JS
-// ❗ La mantenemos porque ilumina muy bien la escena
-const rectLight = new THREE.RectAreaLight(0xffffff, 25, 0.15, 2.5);
-rectLight.position.set(0, 0, 0);
-rectLight.lookAt(0, -1, 0);
-tuboHolder.add(rectLight);
-
-
-// =====================================================
-// ===== LUZ REAL INTERNA QUE SÍ GENERA SOMBRAS =========
-// =====================================================
-// ✔ Esta luz es la que realmente proyecta las sombras
-// ✔ Muy suave para simular luminosidad del LED real
-const pointLED = new THREE.PointLight(0xffffff, 1.8, 6);
-pointLED.castShadow = true;
-pointLED.shadow.mapSize.width = 2048;
-pointLED.shadow.mapSize.height = 2048;
-pointLED.shadow.bias = -0.0005;
-
-// Colocarla exactamente dentro del tubo
-pointLED.position.set(0, 0, 0);
-
-tuboHolder.add(pointLED);
-
+  return holder;
+}
 
 // =====================================================
-// ===== ROTACIÓN DEL TUBO (OPCIONAL) ===================
+// ======= CREAR Y CONFIGURAR POSICIONES ===============
 // =====================================================
-tuboHolder.rotation.y = Math.PI / 2;
+
+const lamparas = []; // ← Guardamos las 7 lámparas aquí
+
+// posiciones iniciales (PUEDES EDITARLAS COMO QUIERAS)
+const posicionesIniciales = [
+  { x: -7.19, y: 2, z: 0 },
+  { x: -6.2, y: 2, z: -3.6 },
+  { x: -3.6, y: 2, z: -6.2 },
+  { x:  0, y: 2.1, z: -7.23 },
+  { x:  3.6, y: 2.2, z: -6.2 },
+  { x:  6.2, y: 2.3, z: -3.6 },
+  { x:  7.25, y: 2.4, z: 0 },
+
+  { x:  3.6, y: 2.4, z: 6.2 },
+  { x:  0, y: 2.4, z: 7.23 },
+  { x:  -3.6, y: 2.4, z: 6.2 },
+];
+
+// rotaciones iniciales (PUEDES EDITARLAS)
+const rotacionesIniciales = [
+  { x:Math.PI / 2, y: Math.PI / 1, z: 0 },
+  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
+  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
+  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
+  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
+  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
+  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
+  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
+  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
+  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
+];
+
+// CREAR LAS 7 LÁMPARAS
+for (let i = 0; i < 10; i++) {
+  const lampara = crearLampara();
+
+  // Aplicar posición personalizada
+  lampara.position.set(
+    posicionesIniciales[i].x,
+    posicionesIniciales[i].y,
+    posicionesIniciales[i].z
+  );
+
+  // Aplicar rotación personalizada
+  lampara.rotation.set(
+    rotacionesIniciales[i].x,
+    rotacionesIniciales[i].y,
+    rotacionesIniciales[i].z
+  );
+
+  // Agregar a la escena
+  scene.add(lampara);
+
+  // Guardar referencia
+  lamparas.push(lampara);
+}
 
 
 
@@ -308,7 +349,7 @@ gltfLoader.load("./scene.glb", (gltf) => {
     if (obj.isMesh && obj.material) {
       obj.castShadow = true;
       obj.receiveShadow = true;
-      obj.material.envMapIntensity = 0.7;
+      obj.material.envMapIntensity = 0.3;
     }
   });
 
