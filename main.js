@@ -1,30 +1,47 @@
 // ======== IMPORTS (r129) ========
 import * as THREE from "https://cdn.skypack.dev/three@0.129.0/build/three.module.js";
-import { GLTFLoader } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/GLTFLoader.js";
-import { RGBELoader } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/RGBELoader.js";
-import { OrbitControls } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/controls/OrbitControls.js";
-import { Sky } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/objects/Sky.js";
+import {
+  GLTFLoader
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/GLTFLoader.js";
+import {
+  RGBELoader
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/RGBELoader.js";
+import {
+  OrbitControls
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/controls/OrbitControls.js";
+import {
+  Sky
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/objects/Sky.js";
 import Stats from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/libs/stats.module.js";
 
-import { RectAreaLightUniformsLib } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/lights/RectAreaLightUniformsLib.js";
-import { RectAreaLightHelper } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/helpers/RectAreaLightHelper.js";
+import {
+  RectAreaLightUniformsLib
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/lights/RectAreaLightUniformsLib.js";
+import {
+  RectAreaLightHelper
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/helpers/RectAreaLightHelper.js";
 
-// *** REFLECTOR ***
-import { Reflector } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/objects/Reflector.js";
+import {
+  Reflector
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/objects/Reflector.js";
 
 RectAreaLightUniformsLib.init();
 
-// === POST-PROCESSING ===
-import { EffectComposer } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/UnrealBloomPass.js";
+import {
+  EffectComposer
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/EffectComposer.js";
+import {
+  RenderPass
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/RenderPass.js";
+import {
+  UnrealBloomPass
+} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/UnrealBloomPass.js";
 
 
-// ==========================================================
-// === CONFIGURACIÓN DE OBJETOS QUE PARPADEAN ===============
-// ==========================================================
-const colorConfigs = [
-  {
+// =====================================================
+// CONFIG OBJ PARPADEO
+// =====================================================
+const colorConfigs = [{
     name: "llanta_derecha",
     frameStart: 365,
     frameEnd: 430,
@@ -80,7 +97,9 @@ camera.position.set(0, 1, 7);
 
 
 // ========= RENDERER =========
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({
+  antialias: true
+});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -147,117 +166,180 @@ const theta = THREE.MathUtils.degToRad(azimuth);
 sun.setFromSphericalCoords(1, phi, theta);
 skyUniforms["sunPosition"].value.copy(sun);
 
+
+// // =====================================================
+// // ========== LÁMPARAS LED ARCO 180° CON LUZ REAL =======
+// // =====================================================
+
+// // === CURVA SEMICÍRCULO ===
+// function crearCurvaSemiArco(radio = 4.5) {
+//   const puntos = [];
+//   const segmentos = 20; // más = luz más suave
+
+//   for (let i = 0; i <= segmentos; i++) {
+//     const t = i / segmentos;
+//     const angulo = Math.PI * t; // 0° → 180°
+//     puntos.push(
+//       new THREE.Vector3(
+//         Math.cos(angulo) * radio,
+//         0,
+//         Math.sin(angulo) * radio
+//       )
+//     );
+//   }
+
+//   return new THREE.CatmullRomCurve3(puntos);
+// }
+
+
+// // === CREAR UNA LÁMPARA COMPLETA ===
+// function crearLamparaLED_Arco() {
+//   const holder = new THREE.Object3D();
+
+//   // ---- curva del arco ----
+//   const curva = crearCurvaSemiArco(7.5);
+//   const tuboGeo = new THREE.TubeGeometry(curva, 30, 0.1, 10, false);
+
+//   const tuboMat = new THREE.MeshPhysicalMaterial({
+//     color: new THREE.Color(1, 1, 1),
+//     emissive: new THREE.Color(0.42, 0.69, 1),
+//     emissiveIntensity: 7,
+//     roughness: 0.15,
+//     metalness: 0,
+//     transmission: 0.55,
+//     thickness: 1.0,
+//     ior: 1.35,
+//     envMapIntensity: 3
+//   });
+
+//   const tubo = new THREE.Mesh(tuboGeo, tuboMat);
+//   holder.add(tubo);
+
+//   // ---- luces puntuales siguiendo la curva ----
+//   const LUCES = 7; // entre más luces, más lineal
+//   for (let i = 0; i < LUCES; i++) {
+//     const t = i / (LUCES - 1);
+//     const pos = curva.getPoint(t);
+
+//     const luz = new THREE.PointLight(0x78a8ff, 0.5);
+//     luz.decay = 0; // elimina cálculos de caída de luz
+//     luz.distance = 0; // luz infinita → más barato que distance dinámica
+//     luz.castShadow = false;
+
+//     luz.position.copy(pos);
+//     holder.add(luz);
+//   }
+
+//   return holder;
+// }
+
+
+// // =====================================================
+// // === CREAR 7 LÁMPARAS LED EN ARCO =====================
+// // =====================================================
+
+// const lamparas = [];
+
+// const posicionesIniciales = [{
+//     x: 0,
+//     y: -6,
+//     z: -8
+//   },
+//   {
+//     x: 0,
+//     y: -4,
+//     z: -6
+//   },
+//   {
+//     x: 0,
+//     y: -2,
+//     z: -3
+//   },
+//   {
+//     x: 0,
+//     y: 0,
+//     z: 0
+//   },
+//   {
+//     x: 0,
+//     y: -2,
+//     z: 3
+//   },
+//   {
+//     x: 0,
+//     y: -4,
+//     z: 6
+//   },
+//   {
+//     x: 0,
+//     y: -6,
+//     z: 8
+//   }
+// ];
+
+// for (let i = 0; i < 7; i++) {
+//   const lampara = crearLamparaLED_Arco();
+
+//   lampara.position.set(
+//     posicionesIniciales[i].x,
+//     posicionesIniciales[i].y,
+//     posicionesIniciales[i].z
+//   );
+
+//   lampara.rotation.x = Math.PI / -2;
+
+//   scene.add(lampara);
+//   lamparas.push(lampara);
+// }
+
 // =====================================================
-// ========== ELIMINAR LUZ DIRECCIONAL =================
-// =====================================================
-// ❌ Ya no usamos DirectionalLight para sombras
-// ❌ Se elimina todo el bloque anterior
-//     dirLight.castShadow = true
-//     scene.add(dirLight);
+// ========== 2 LUCES RECTANGULARES PERSONALIZABLES =====
 // =====================================================
 
+// --- Luz 1 ---
+const rectLight1 = new THREE.RectAreaLight(0xffffff, 17, 11, 3);
+const holder1 = new THREE.Object3D();
+holder1.add(rectLight1);
 
-// =====================================================
-// ========== CREAR 7 LÁMPARAS LED ======================
-// =====================================================
+// posición personalizable
+holder1.position.set(4, 4.3, -1);   // <<--- cambia aquí
+holder1.rotation.set(Math.PI / -2, 0, Math.PI / 2);   // <<--- rota aquí
 
-// --- GEOMETRÍA Y MATERIAL COMPARTIDOS ---
-const tuboGeo = new THREE.BoxGeometry(0.1, 0.1, 4);
-const tuboMat = new THREE.MeshPhysicalMaterial({
-  color: new THREE.Color(1, 1, 1),
-  emissive: new THREE.Color(1, 1, 1),
-  emissiveIntensity: 20,
-  roughness: 0.1,
-  metalness: 0.0
-});
+scene.add(holder1);
 
-// --- FUNCIÓN QUE CREA UNA LÁMPARA COMPLETA ---
-function crearLampara() {
-  const holder = new THREE.Object3D();
+// Helper luz 1
+const helper1 = new RectAreaLightHelper(rectLight1);
+rectLight1.add(helper1);
 
-  // --- TUBO LED ---
-  const tuboLED = new THREE.Mesh(tuboGeo, tuboMat);
-  tuboLED.castShadow = false;
-  holder.add(tuboLED);
+// --- Luz 2 ---
+const rectLight2 = new THREE.RectAreaLight(0xffffff, 17, 11, 3);
+const holder2 = new THREE.Object3D();
+holder2.add(rectLight2);
 
-  // --- LUZ RECTANGULAR ---
-  const rectLight = new THREE.RectAreaLight(0xffffff, 20, 0.15, 2.5);
-  rectLight.position.set(0, 0, 0);
-  rectLight.lookAt(0, -1, 0);
-  holder.add(rectLight);
+// posición personalizable
+holder2.position.set(-4, 4.3, -1); // <<--- cambia aquí
+holder2.rotation.set(Math.PI / -2, 0, Math.PI / 2); // <<--- rota aquí
 
-  // --- LUZ REAL INTERNA (CON SOMBRAS) ---
-  const pointLED = new THREE.PointLight(0xffffff, 4, 12);
-  pointLED.castShadow = false;
-  pointLED.shadow.mapSize.width = 2048;
-  pointLED.shadow.mapSize.height = 2048;
-  pointLED.shadow.bias = -0.0005;
-  pointLED.position.set(0, 0, 0);
-  holder.add(pointLED);
+scene.add(holder2);
 
-  return holder;
-}
+// Helper luz 2
+const helper2 = new RectAreaLightHelper(rectLight2);
+rectLight2.add(helper2);
 
-// =====================================================
-// ======= CREAR Y CONFIGURAR POSICIONES ===============
-// =====================================================
+// --- Luz pantalla ---
+const rectLight3 = new THREE.RectAreaLight(0x78a8ff, 3, 17, 4.4);
+const holder3 = new THREE.Object3D();
+holder3.add(rectLight3);
 
-const lamparas = []; // ← Guardamos las 7 lámparas aquí
+// posición personalizable
+holder3.position.set(0, 2.7, -6.7); // <<--- cambia aquí
+holder3.rotation.set(0, Math.PI / -1, 0); // <<--- rota aquí
 
-// posiciones iniciales (PUEDES EDITARLAS COMO QUIERAS)
-const posicionesIniciales = [
-  { x: -7.19, y: 2, z: 0 },
-  { x: -6.2, y: 2, z: -3.6 },
-  { x: -3.6, y: 2, z: -6.2 },
-  { x:  0, y: 2.1, z: -7.23 },
-  { x:  3.6, y: 2.2, z: -6.2 },
-  { x:  6.2, y: 2.3, z: -3.6 },
-  { x:  7.25, y: 2.4, z: 0 },
+scene.add(holder3);
 
-  { x:  3.6, y: 2.4, z: 6.2 },
-  { x:  0, y: 2.4, z: 7.23 },
-  { x:  -3.6, y: 2.4, z: 6.2 },
-];
-
-// rotaciones iniciales (PUEDES EDITARLAS)
-const rotacionesIniciales = [
-  { x:Math.PI / 2, y: Math.PI / 1, z: 0 },
-  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
-  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
-  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
-  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
-  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
-  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
-  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
-  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
-  { x: Math.PI / 2, y: Math.PI / 1, z: 0 },
-];
-
-// CREAR LAS 7 LÁMPARAS
-for (let i = 0; i < 10; i++) {
-  const lampara = crearLampara();
-
-  // Aplicar posición personalizada
-  lampara.position.set(
-    posicionesIniciales[i].x,
-    posicionesIniciales[i].y,
-    posicionesIniciales[i].z
-  );
-
-  // Aplicar rotación personalizada
-  lampara.rotation.set(
-    rotacionesIniciales[i].x,
-    rotacionesIniciales[i].y,
-    rotacionesIniciales[i].z
-  );
-
-  // Agregar a la escena
-  scene.add(lampara);
-
-  // Guardar referencia
-  lamparas.push(lampara);
-}
-
+// Helper luz 3
+const helper3 = new RectAreaLightHelper(rectLight3);
+rectLight3.add(helper3);
 
 
 // ========= PISO =========
@@ -277,13 +359,13 @@ roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping;
 roughnessMap.repeat.set(5, 5);
 
 const ceramicMaterial = new THREE.MeshPhysicalMaterial({
-  color: new THREE.Color(0, 0, 0),
+  color: 0x181818,
   roughness: 0.9,
   metalness: 0.7,
   roughnessMap,
   displacementMap,
   displacementScale: 0.02,
-  transparent: true,
+  transparent: false,
   opacity: 0.65,
   clearcoat: 0,
   clearcoatRoughness: 1
@@ -307,13 +389,14 @@ const reflector = new Reflector(reflectorGeo, {
   clipBias: 0.003,
   textureWidth: window.innerWidth * devicePixelRatio,
   textureHeight: window.innerHeight * devicePixelRatio,
-  color: 0x222222
+  color: 0x000000,
+  transparent: false,
 });
 
 reflector.rotation.x = -Math.PI / 2;
 reflector.position.y = -0.12;
 
-scene.add(reflector);
+//scene.add(reflector);
 
 
 // ========= CARGA MODELO =========
@@ -374,7 +457,7 @@ gltfLoader.load("./scene.glb", (gltf) => {
     // === ANIMACIÓN DE LA CÁMARA (ES LA QUE CONTROLA TODO) ===
     if (cameraClip) {
       cameraAction = mixer.clipAction(cameraClip);
-      cameraAction.setLoop(THREE.LoopRepeat);  // Solo ella hace loop
+      cameraAction.setLoop(THREE.LoopRepeat); // Solo ella hace loop
       cameraAction.clampWhenFinished = false;
       cameraAction.play();
     }
@@ -398,7 +481,7 @@ gltfLoader.load("./scene.glb", (gltf) => {
         });
       }
     });
-}
+  }
 });
 
 
