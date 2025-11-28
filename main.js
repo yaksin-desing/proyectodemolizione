@@ -167,134 +167,6 @@ sun.setFromSphericalCoords(1, phi, theta);
 skyUniforms["sunPosition"].value.copy(sun);
 
 
-// // =====================================================
-// // ========== LÁMPARAS LED ARCO 180° CON LUZ REAL =======
-// // =====================================================
-
-// // === CURVA SEMICÍRCULO ===
-// function crearCurvaSemiArco(radio = 4.5) {
-//   const puntos = [];
-//   const segmentos = 20; // más = luz más suave
-
-//   for (let i = 0; i <= segmentos; i++) {
-//     const t = i / segmentos;
-//     const angulo = Math.PI * t; // 0° → 180°
-//     puntos.push(
-//       new THREE.Vector3(
-//         Math.cos(angulo) * radio,
-//         0,
-//         Math.sin(angulo) * radio
-//       )
-//     );
-//   }
-
-//   return new THREE.CatmullRomCurve3(puntos);
-// }
-
-
-// // === CREAR UNA LÁMPARA COMPLETA ===
-// function crearLamparaLED_Arco() {
-//   const holder = new THREE.Object3D();
-
-//   // ---- curva del arco ----
-//   const curva = crearCurvaSemiArco(7.5);
-//   const tuboGeo = new THREE.TubeGeometry(curva, 30, 0.1, 10, false);
-
-//   const tuboMat = new THREE.MeshPhysicalMaterial({
-//     color: new THREE.Color(1, 1, 1),
-//     emissive: new THREE.Color(0.42, 0.69, 1),
-//     emissiveIntensity: 7,
-//     roughness: 0.15,
-//     metalness: 0,
-//     transmission: 0.55,
-//     thickness: 1.0,
-//     ior: 1.35,
-//     envMapIntensity: 3
-//   });
-
-//   const tubo = new THREE.Mesh(tuboGeo, tuboMat);
-//   holder.add(tubo);
-
-//   // ---- luces puntuales siguiendo la curva ----
-//   const LUCES = 7; // entre más luces, más lineal
-//   for (let i = 0; i < LUCES; i++) {
-//     const t = i / (LUCES - 1);
-//     const pos = curva.getPoint(t);
-
-//     const luz = new THREE.PointLight(0x78a8ff, 0.5);
-//     luz.decay = 0; // elimina cálculos de caída de luz
-//     luz.distance = 0; // luz infinita → más barato que distance dinámica
-//     luz.castShadow = false;
-
-//     luz.position.copy(pos);
-//     holder.add(luz);
-//   }
-
-//   return holder;
-// }
-
-
-// // =====================================================
-// // === CREAR 7 LÁMPARAS LED EN ARCO =====================
-// // =====================================================
-
-// const lamparas = [];
-
-// const posicionesIniciales = [{
-//     x: 0,
-//     y: -6,
-//     z: -8
-//   },
-//   {
-//     x: 0,
-//     y: -4,
-//     z: -6
-//   },
-//   {
-//     x: 0,
-//     y: -2,
-//     z: -3
-//   },
-//   {
-//     x: 0,
-//     y: 0,
-//     z: 0
-//   },
-//   {
-//     x: 0,
-//     y: -2,
-//     z: 3
-//   },
-//   {
-//     x: 0,
-//     y: -4,
-//     z: 6
-//   },
-//   {
-//     x: 0,
-//     y: -6,
-//     z: 8
-//   }
-// ];
-
-// for (let i = 0; i < 7; i++) {
-//   const lampara = crearLamparaLED_Arco();
-
-//   lampara.position.set(
-//     posicionesIniciales[i].x,
-//     posicionesIniciales[i].y,
-//     posicionesIniciales[i].z
-//   );
-
-//   lampara.rotation.x = Math.PI / -2;
-
-//   scene.add(lampara);
-//   lamparas.push(lampara);
-// }
-
-// =====================================================
-// ========== 2 LUCES RECTANGULARES PERSONALIZABLES =====
-// =====================================================
 
 // --- Luz 1 ---
 const rectLight1 = new THREE.RectAreaLight(0xffffff, 17, 11, 3);
@@ -376,27 +248,10 @@ ceramicMaterial.envMapIntensity = 0.7;
 const ceramicLayer = new THREE.Mesh(floorGeo, ceramicMaterial);
 ceramicLayer.rotation.x = -Math.PI / 2;
 ceramicLayer.position.y = -0.1;
-ceramicLayer.receiveShadow = true;
+ceramicLayer.receiveShadow = false;
 scene.add(ceramicLayer);
 
 
-// =====================================================
-// ================= REFLECTOR (REEMPLAZA AGUA) ========
-// =====================================================
-const reflectorGeo = new THREE.PlaneGeometry(80, 70);
-
-const reflector = new Reflector(reflectorGeo, {
-  clipBias: 0.003,
-  textureWidth: window.innerWidth * devicePixelRatio,
-  textureHeight: window.innerHeight * devicePixelRatio,
-  color: 0x000000,
-  transparent: false,
-});
-
-reflector.rotation.x = -Math.PI / 2;
-reflector.position.y = -0.12;
-
-//scene.add(reflector);
 
 
 // ========= CARGA MODELO =========
