@@ -133,18 +133,6 @@ controls.target.set(0, 1, 0);
 controls.update();
 
 
-// ========= HDRI =========
-const pmremGenerator = new THREE.PMREMGenerator(renderer);
-pmremGenerator.compileEquirectangularShader();
-
-new RGBELoader().load("hdr.hdr", (hdrMap) => {
-  const envMap = pmremGenerator.fromEquirectangular(hdrMap).texture;
-  scene.environment = null;
-
-  hdrMap.dispose();
-  pmremGenerator.dispose();
-});
-
 
 // ========= CIELO =========
 const sky = new Sky();
@@ -215,7 +203,7 @@ rectLight3.add(helper3);
 
 
 // ========= PISO =========
-const floorGeo = new THREE.PlaneGeometry(80, 70);
+const floorGeo = new THREE.PlaneGeometry(30, 20);
 const textureLoader = new THREE.TextureLoader();
 
 const displacementMap = textureLoader.load("marmol_disp.png");
