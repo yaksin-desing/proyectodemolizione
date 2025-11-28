@@ -186,20 +186,20 @@ scene.add(holder2);
 const helper2 = new RectAreaLightHelper(rectLight2);
 rectLight2.add(helper2);
 
-// --- Luz pantalla ---
-const rectLight3 = new THREE.RectAreaLight(0x78a8ff, 3, 17, 4.4);
-const holder3 = new THREE.Object3D();
-holder3.add(rectLight3);
+// // --- Luz pantalla ---
+// const rectLight3 = new THREE.RectAreaLight(0x78a8ff, 3, 17, 4.4);
+// const holder3 = new THREE.Object3D();
+// holder3.add(rectLight3);
 
-// posición personalizable
-holder3.position.set(0, 2.7, -6.7); // <<--- cambia aquí
-holder3.rotation.set(0, Math.PI / -1, 0); // <<--- rota aquí
+// // posición personalizable
+// holder3.position.set(0, 2.7, -6.7); // <<--- cambia aquí
+// holder3.rotation.set(0, Math.PI / -1, 0); // <<--- rota aquí
 
-scene.add(holder3);
+// scene.add(holder3);
 
-// Helper luz 3
-const helper3 = new RectAreaLightHelper(rectLight3);
-rectLight3.add(helper3);
+// // Helper luz 3
+// const helper3 = new RectAreaLightHelper(rectLight3);
+// rectLight3.add(helper3);
 
 
 // ========= PISO =========
@@ -237,7 +237,7 @@ const ceramicLayer = new THREE.Mesh(floorGeo, ceramicMaterial);
 ceramicLayer.rotation.x = -Math.PI / 2;
 ceramicLayer.position.y = -0.1;
 ceramicLayer.receiveShadow = false;
-scene.add(ceramicLayer);
+//scene.add(ceramicLayer);
 
 
 
