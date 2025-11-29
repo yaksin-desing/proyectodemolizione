@@ -134,6 +134,31 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 container.appendChild(renderer.domElement);
 
+  function detectWebGLType() {
+    const canvas = document.createElement("canvas");
+
+    const hasWebGL2 = !!canvas.getContext("webgl2");
+    const hasWebGL1 = !!canvas.getContext("webgl");
+
+    // Detectar si es móvil
+    const isMobile = /Android/i.test(navigator.userAgent);
+
+    let result = "";
+
+    if (hasWebGL2) result = "Este dispositivo usa WebGL2 👍";
+    else if (hasWebGL1) result = "Este dispositivo usa WebGL1 ⚠️";
+    else result = "Este dispositivo NO soporta WebGL ❌";
+
+    // Mostrar alert solo en móviles
+    if (isMobile) {
+      alert(result);
+    } else {
+      console.log(result);
+    }
+  }
+
+  detectWebGLType();
+
 
 // =====================================================
 // === POST-PROCESSING =================================
@@ -431,30 +456,5 @@ window.addEventListener("resize", () => {
   renderer.setSize(innerWidth, innerHeight);
   composer.setSize(innerWidth, innerHeight);
   bloomPass.setSize(innerWidth, innerHeight);
-
-  function detectWebGLType() {
-    const canvas = document.createElement("canvas");
-
-    const hasWebGL2 = !!canvas.getContext("webgl2");
-    const hasWebGL1 = !!canvas.getContext("webgl");
-
-    // Detectar si es móvil
-    const isMobile = /Android|iPhone|iPad|iPod|Samsung|Huawei|Miui|Mobile/i.test(navigator.userAgent);
-
-    let result = "";
-
-    if (hasWebGL2) result = "Este dispositivo usa WebGL2 👍";
-    else if (hasWebGL1) result = "Este dispositivo usa WebGL1 ⚠️";
-    else result = "Este dispositivo NO soporta WebGL ❌";
-
-    // Mostrar alert solo en móviles
-    if (isMobile) {
-      alert(result);
-    } else {
-      console.log(result);
-    }
-  }
-
-  detectWebGLType();
 
 });
