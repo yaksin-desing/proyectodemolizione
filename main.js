@@ -85,7 +85,33 @@ if (!container) throw new Error("Falta <div id='canvas-container'> en tu HTML");
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
+// ========= LUZ DIRECCIONAL =========
+const dirLight = new THREE.DirectionalLight(0xffffff, 7);
+dirLight.position.set(5, 4, 0);  // altura y dirección de luz
+dirLight.castShadow = true;
 
+// Config sombra suave
+dirLight.shadow.mapSize.width = 2048;
+dirLight.shadow.mapSize.height = 2048;
+dirLight.shadow.camera.near = 0.5;
+dirLight.shadow.camera.far = 50;
+
+// Ampliar área de sombras para que no se corten
+dirLight.shadow.camera.left = -20;
+dirLight.shadow.camera.right = 20;
+dirLight.shadow.camera.top = 20;
+dirLight.shadow.camera.bottom = -20;
+
+scene.add(dirLight);
+
+// Opcional: helper para ver desde dónde ilumina
+const dirHelper = new THREE.DirectionalLightHelper(dirLight, 3);
+scene.add(dirHelper);
+
+// ========= LUZ DIRECCIONAL =========
+const dirLight2 = new THREE.DirectionalLight(0xffffff, 7);
+dirLight2.position.set(-5, 4, 0);  // altura y dirección de luz
+scene.add(dirLight2);
 // ========= CÁMARA =========
 const camera = new THREE.PerspectiveCamera(
   75,
@@ -156,35 +182,35 @@ skyUniforms["sunPosition"].value.copy(sun);
 
 
 
-// --- Luz 1 ---
-const rectLight1 = new THREE.RectAreaLight(0xffffff, 17, 11, 3);
-const holder1 = new THREE.Object3D();
-holder1.add(rectLight1);
+// // --- Luz 1 ---
+// const rectLight1 = new THREE.RectAreaLight(0xffffff, 17, 11, 3);
+// const holder1 = new THREE.Object3D();
+// holder1.add(rectLight1);
 
-// posición personalizable
-holder1.position.set(4, 4.3, -1);   // <<--- cambia aquí
-holder1.rotation.set(Math.PI / -2, 0, Math.PI / 2);   // <<--- rota aquí
+// // posición personalizable
+// holder1.position.set(4, 4.3, -1);   // <<--- cambia aquí
+// holder1.rotation.set(Math.PI / -2, 0, Math.PI / 2);   // <<--- rota aquí
 
-scene.add(holder1);
+// scene.add(holder1);
 
-// Helper luz 1
-const helper1 = new RectAreaLightHelper(rectLight1);
-rectLight1.add(helper1);
+// // Helper luz 1
+// const helper1 = new RectAreaLightHelper(rectLight1);
+// rectLight1.add(helper1);
 
-// --- Luz 2 ---
-const rectLight2 = new THREE.RectAreaLight(0xffffff, 17, 11, 3);
-const holder2 = new THREE.Object3D();
-holder2.add(rectLight2);
+// // --- Luz 2 ---
+// const rectLight2 = new THREE.RectAreaLight(0xffffff, 17, 11, 3);
+// const holder2 = new THREE.Object3D();
+// holder2.add(rectLight2);
 
-// posición personalizable
-holder2.position.set(-4, 4.3, -1); // <<--- cambia aquí
-holder2.rotation.set(Math.PI / -2, 0, Math.PI / 2); // <<--- rota aquí
+// // posición personalizable
+// holder2.position.set(-4, 4.3, -1); // <<--- cambia aquí
+// holder2.rotation.set(Math.PI / -2, 0, Math.PI / 2); // <<--- rota aquí
 
-scene.add(holder2);
+// scene.add(holder2);
 
-// Helper luz 2
-const helper2 = new RectAreaLightHelper(rectLight2);
-rectLight2.add(helper2);
+// // Helper luz 2
+// const helper2 = new RectAreaLightHelper(rectLight2);
+// rectLight2.add(helper2);
 
 // // --- Luz pantalla ---
 // const rectLight3 = new THREE.RectAreaLight(0x78a8ff, 3, 17, 4.4);
@@ -231,13 +257,13 @@ const ceramicMaterial = new THREE.MeshPhysicalMaterial({
   clearcoatRoughness: 1
 });
 
-ceramicMaterial.envMapIntensity = 0.7;
+ceramicMaterial.envMapIntensity = 1;
 
 const ceramicLayer = new THREE.Mesh(floorGeo, ceramicMaterial);
 ceramicLayer.rotation.x = -Math.PI / 2;
 ceramicLayer.position.y = -0.1;
 ceramicLayer.receiveShadow = false;
-//scene.add(ceramicLayer);
+scene.add(ceramicLayer);
 
 
 
@@ -275,7 +301,7 @@ gltfLoader.load("./scene.glb", (gltf) => {
     if (obj.isMesh && obj.material) {
       obj.castShadow = true;
       obj.receiveShadow = true;
-      obj.material.envMapIntensity = 0.3;
+      
     }
   });
 
