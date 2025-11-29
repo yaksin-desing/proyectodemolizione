@@ -1,41 +1,15 @@
-// ======== IMPORTS (r129) ========
-import * as THREE from "https://cdn.skypack.dev/three@0.129.0/build/three.module.js";
-import {
-  GLTFLoader
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/GLTFLoader.js";
-import {
-  RGBELoader
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/RGBELoader.js";
-import {
-  OrbitControls
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/controls/OrbitControls.js";
-import {
-  Sky
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/objects/Sky.js";
-import Stats from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/libs/stats.module.js";
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-import {
-  RectAreaLightUniformsLib
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/lights/RectAreaLightUniformsLib.js";
-import {
-  RectAreaLightHelper
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/helpers/RectAreaLightHelper.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-import {
-  Reflector
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/objects/Reflector.js";
-
+import Stats from "three/addons/libs/stats.module.js";
+import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
+import { RectAreaLightHelper } from "three/addons/helpers/RectAreaLightHelper.js";
 RectAreaLightUniformsLib.init();
-
-import {
-  EffectComposer
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/EffectComposer.js";
-import {
-  RenderPass
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/RenderPass.js";
-import {
-  UnrealBloomPass
-} from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
 
 // =====================================================
@@ -85,33 +59,36 @@ if (!container) throw new Error("Falta <div id='canvas-container'> en tu HTML");
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
-// ========= LUZ DIRECCIONAL =========
-const dirLight = new THREE.DirectionalLight(0xffffff, 7);
-dirLight.position.set(5, 4, 0); // altura y dirección de luz
-dirLight.castShadow = true;
+// // ========= LUZ DIRECCIONAL =========
+// const dirLight = new THREE.DirectionalLight(0xffffff, 7);
+// dirLight.position.set(5, 4, 0); // altura y dirección de luz
+// dirLight.castShadow = false;
 
-// Config sombra suave
-dirLight.shadow.mapSize.width = 2048;
-dirLight.shadow.mapSize.height = 2048;
-dirLight.shadow.camera.near = 0.5;
-dirLight.shadow.camera.far = 50;
+// // Config sombra suave
+// dirLight.shadow.mapSize.width = 2048;
+// dirLight.shadow.mapSize.height = 2048;
+// dirLight.shadow.camera.near = 0.5;
+// dirLight.shadow.camera.far = 50;
 
-// Ampliar área de sombras para que no se corten
-dirLight.shadow.camera.left = -20;
-dirLight.shadow.camera.right = 20;
-dirLight.shadow.camera.top = 20;
-dirLight.shadow.camera.bottom = -20;
+// // Ampliar área de sombras para que no se corten
+// dirLight.shadow.camera.left = -20;
+// dirLight.shadow.camera.right = 20;
+// dirLight.shadow.camera.top = 20;
+// dirLight.shadow.camera.bottom = -20;
 
-scene.add(dirLight);
+// scene.add(dirLight);
 
-// Opcional: helper para ver desde dónde ilumina
-const dirHelper = new THREE.DirectionalLightHelper(dirLight, 3);
-scene.add(dirHelper);
+// // Opcional: helper para ver desde dónde ilumina
+// const dirHelper = new THREE.DirectionalLightHelper(dirLight, 3);
+// scene.add(dirHelper);
 
-// ========= LUZ DIRECCIONAL =========
-const dirLight2 = new THREE.DirectionalLight(0xffffff, 7);
-dirLight2.position.set(-5, 4, 0); // altura y dirección de luz
-scene.add(dirLight2);
+// // ========= LUZ DIRECCIONAL =========
+// const dirLight2 = new THREE.DirectionalLight(0xffffff, 7);
+// dirLight2.position.set(-5, 4, 0); // altura y dirección de luz
+// scene.add(dirLight2);
+
+
+
 // ========= CÁMARA =========
 const camera = new THREE.PerspectiveCamera(
   75,
@@ -119,7 +96,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   500
 );
-camera.position.set(0, 1, 7);
+//camera.position.set(0, 1, 7);
 
 
 // ========= RENDERER =========
@@ -134,32 +111,6 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 container.appendChild(renderer.domElement);
 
-  function detectWebGLType() {
-    const canvas = document.createElement("canvas");
-
-    const hasWebGL2 = !!canvas.getContext("webgl2");
-    const hasWebGL1 = !!canvas.getContext("webgl");
-
-    // Detectar si es móvil
-    const isMobile = /Android/i.test(navigator.userAgent);
-
-    let result = "";
-
-    if (hasWebGL2) result = "Este dispositivo usa WebGL2 👍";
-    else if (hasWebGL1) result = "Este dispositivo usa WebGL1 ⚠️";
-    else result = "Este dispositivo NO soporta WebGL ❌";
-
-    // Mostrar alert solo en móviles
-    if (isMobile) {
-      alert(result);
-    } else {
-      console.log(result);
-    }
-  }
-
-  detectWebGLType();
-
-
 // =====================================================
 // === POST-PROCESSING =================================
 // =====================================================
@@ -169,11 +120,11 @@ composer.addPass(renderPass);
 
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
+  0.17,
   0.2,
-  0.4,
-  0.0
+  1
 );
-//composer.addPass(bloomPass);
+composer.addPass(bloomPass);
 
 
 // ========= ORBIT CONTROLS =========
@@ -185,72 +136,51 @@ controls.update();
 
 
 
-// ========= CIELO =========
-const sky = new Sky();
-sky.scale.setScalar(450000);
 
-const skyUniforms = sky.material.uniforms;
-skyUniforms["turbidity"].value = 20;
-skyUniforms["rayleigh"].value = 1;
-skyUniforms["mieCoefficient"].value = 0.005;
-skyUniforms["mieDirectionalG"].value = 0.9;
+// --- Luz 1 ---
+const rectLight1 = new THREE.RectAreaLight(0xffffff, 12, 11, 3);
+const holder1 = new THREE.Object3D();
+holder1.add(rectLight1);
 
-const sun = new THREE.Vector3();
-const elevation = 50;
-const azimuth = -90;
+// posición personalizable
+holder1.position.set(4, 4.3, -1);   // <<--- cambia aquí
+holder1.rotation.set(Math.PI / -2, 0, Math.PI / 2);   // <<--- rota aquí
 
-const phi = THREE.MathUtils.degToRad(90 - elevation);
-const theta = THREE.MathUtils.degToRad(azimuth);
+scene.add(holder1);
 
-sun.setFromSphericalCoords(1, phi, theta);
-skyUniforms["sunPosition"].value.copy(sun);
+// Helper luz 1
+const helper1 = new RectAreaLightHelper(rectLight1);
+rectLight1.add(helper1);
 
+// --- Luz 2 ---
+const rectLight2 = new THREE.RectAreaLight(0xffffff, 12, 11, 3);
+const holder2 = new THREE.Object3D();
+holder2.add(rectLight2);
 
+// posición personalizable
+holder2.position.set(-4, 4.3, -1); // <<--- cambia aquí
+holder2.rotation.set(Math.PI / -2, 0, Math.PI / 2); // <<--- rota aquí
 
-// // --- Luz 1 ---
-// const rectLight1 = new THREE.RectAreaLight(0xffffff, 17, 11, 3);
-// const holder1 = new THREE.Object3D();
-// holder1.add(rectLight1);
+scene.add(holder2);
 
-// // posición personalizable
-// holder1.position.set(4, 4.3, -1);   // <<--- cambia aquí
-// holder1.rotation.set(Math.PI / -2, 0, Math.PI / 2);   // <<--- rota aquí
+// Helper luz 2
+const helper2 = new RectAreaLightHelper(rectLight2);
+rectLight2.add(helper2);
 
-// scene.add(holder1);
+// --- Luz pantalla ---
+const rectLight3 = new THREE.RectAreaLight(0x78a8ff, 3, 17, 4.4);
+const holder3 = new THREE.Object3D();
+holder3.add(rectLight3);
 
-// // Helper luz 1
-// const helper1 = new RectAreaLightHelper(rectLight1);
-// rectLight1.add(helper1);
+// posición personalizable
+holder3.position.set(0, 2.7, -6.7); // <<--- cambia aquí
+holder3.rotation.set(0, Math.PI / -1, 0); // <<--- rota aquí
 
-// // --- Luz 2 ---
-// const rectLight2 = new THREE.RectAreaLight(0xffffff, 17, 11, 3);
-// const holder2 = new THREE.Object3D();
-// holder2.add(rectLight2);
+scene.add(holder3);
 
-// // posición personalizable
-// holder2.position.set(-4, 4.3, -1); // <<--- cambia aquí
-// holder2.rotation.set(Math.PI / -2, 0, Math.PI / 2); // <<--- rota aquí
-
-// scene.add(holder2);
-
-// // Helper luz 2
-// const helper2 = new RectAreaLightHelper(rectLight2);
-// rectLight2.add(helper2);
-
-// // --- Luz pantalla ---
-// const rectLight3 = new THREE.RectAreaLight(0x78a8ff, 3, 17, 4.4);
-// const holder3 = new THREE.Object3D();
-// holder3.add(rectLight3);
-
-// // posición personalizable
-// holder3.position.set(0, 2.7, -6.7); // <<--- cambia aquí
-// holder3.rotation.set(0, Math.PI / -1, 0); // <<--- rota aquí
-
-// scene.add(holder3);
-
-// // Helper luz 3
-// const helper3 = new RectAreaLightHelper(rectLight3);
-// rectLight3.add(helper3);
+// Helper luz 3
+const helper3 = new RectAreaLightHelper(rectLight3);
+rectLight3.add(helper3);
 
 
 // ========= PISO =========
