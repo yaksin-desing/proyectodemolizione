@@ -10,6 +10,8 @@ RectAreaLightUniformsLib.init();
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { Reflector } from "three/addons/objects/Reflector.js";
+
 
 
 // =====================================================
@@ -59,6 +61,7 @@ if (!container) throw new Error("Falta <div id='canvas-container'> en tu HTML");
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
+
 // // ========= LUZ DIRECCIONAL =========
 // const dirLight = new THREE.DirectionalLight(0xffffff, 7);
 // dirLight.position.set(5, 4, 0); // altura y dirección de luz
@@ -96,12 +99,14 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   500
 );
-//camera.position.set(0, 1, 7);
+camera.position.set(0, 1, 0);
 
 
 // ========= RENDERER =========
 const renderer = new THREE.WebGLRenderer({
-  antialias: true
+  antialias: true,
+  alpha: true,
+
 });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -120,9 +125,9 @@ composer.addPass(renderPass);
 
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.17,
-  0.2,
-  1
+  0.1,
+  0.1,
+  0.0
 );
 composer.addPass(bloomPass);
 
@@ -138,7 +143,7 @@ controls.update();
 
 
 // --- Luz 1 ---
-const rectLight1 = new THREE.RectAreaLight(0xffffff, 12, 11, 3);
+const rectLight1 = new THREE.RectAreaLight(0xffffff, 7, 11, 3);
 const holder1 = new THREE.Object3D();
 holder1.add(rectLight1);
 
@@ -153,7 +158,7 @@ const helper1 = new RectAreaLightHelper(rectLight1);
 rectLight1.add(helper1);
 
 // --- Luz 2 ---
-const rectLight2 = new THREE.RectAreaLight(0xffffff, 12, 11, 3);
+const rectLight2 = new THREE.RectAreaLight(0xffffff, 7, 11, 3);
 const holder2 = new THREE.Object3D();
 holder2.add(rectLight2);
 
@@ -206,13 +211,13 @@ const ceramicMaterial = new THREE.MeshPhysicalMaterial({
   roughnessMap,
   displacementMap,
   displacementScale: 0.02,
-  transparent: false,
-  opacity: 0.65,
+  transparent: true,
+  opacity: 0.7,
   clearcoat: 0,
   clearcoatRoughness: 1
 });
 
-ceramicMaterial.envMapIntensity = 1;
+ceramicMaterial.envMapIntensity = 0;
 
 const ceramicLayer = new THREE.Mesh(floorGeo, ceramicMaterial);
 ceramicLayer.rotation.x = -Math.PI / 2;
@@ -221,6 +226,20 @@ ceramicLayer.receiveShadow = false;
 scene.add(ceramicLayer);
 
 
+// ========= PLANO CON REFLEJO =========
+const reflectorGeometry = new THREE.PlaneGeometry(30, 20);
+
+const reflectiveFloor = new Reflector(reflectorGeometry, {
+  clipBias: 0.003,
+  textureWidth: window.innerWidth * window.devicePixelRatio,
+  textureHeight: window.innerHeight * window.devicePixelRatio,
+  color: 0x222222, // tono del reflejo
+  recursion: 2      // reflejo suave
+});
+
+reflectiveFloor.rotation.x = -Math.PI / 2;
+reflectiveFloor.position.y = -0.099; // un poco encima del piso existente
+scene.add(reflectiveFloor);
 
 
 // ========= CARGA MODELO =========
