@@ -12,6 +12,10 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { Reflector } from "three/addons/objects/Reflector.js";
 
+// =====================================================
+// CONTROL DE INICIO
+// =====================================================
+let ready = false;
 
 
 // =====================================================
@@ -188,6 +192,7 @@ const helper3 = new RectAreaLightHelper(rectLight3);
 rectLight3.add(helper3);
 
 
+
 // ========= PISO =========
 const floorGeo = new THREE.PlaneGeometry(30, 20);
 const textureLoader = new THREE.TextureLoader();
@@ -233,12 +238,12 @@ const reflectiveFloor = new Reflector(reflectorGeometry, {
   clipBias: 0.003,
   textureWidth: window.innerWidth * window.devicePixelRatio,
   textureHeight: window.innerHeight * window.devicePixelRatio,
-  color: 0x222222, // tono del reflejo
-  recursion: 2      // reflejo suave
+  color: 0x222222,
+  recursion: 2
 });
 
 reflectiveFloor.rotation.x = -Math.PI / 2;
-reflectiveFloor.position.y = -0.099; // un poco encima del piso existente
+reflectiveFloor.position.y = -0.099;
 scene.add(reflectiveFloor);
 
 
@@ -275,7 +280,6 @@ gltfLoader.load("./scene.glb", (gltf) => {
     if (obj.isMesh && obj.material) {
       obj.castShadow = true;
       obj.receiveShadow = true;
-
     }
   });
 
@@ -287,7 +291,6 @@ gltfLoader.load("./scene.glb", (gltf) => {
     let cameraClip = null;
     let modelClips = [];
 
-    // Separar animaciones de cámara y modelo
     gltf.animations.forEach((clip) => {
       const isCameraAnim = clip.tracks.some(t =>
         t.name.toLowerCase().includes("camera")
@@ -297,15 +300,13 @@ gltfLoader.load("./scene.glb", (gltf) => {
       else modelClips.push(clip);
     });
 
-    // === ANIMACIÓN DE LA CÁMARA (ES LA QUE CONTROLA TODO) ===
     if (cameraClip) {
       cameraAction = mixer.clipAction(cameraClip);
-      cameraAction.setLoop(THREE.LoopRepeat); // Solo ella hace loop
+      cameraAction.setLoop(THREE.LoopRepeat);
       cameraAction.clampWhenFinished = false;
       cameraAction.play();
     }
 
-    // === ANIMACIONES DEL MODELO (UNA SOLA VEZ, PERO LUEGO SE REINICIAN MANUALMENTE) ===
     modelClips.forEach((clip) => {
       const action = mixer.clipAction(clip);
       action.setLoop(THREE.LoopOnce);
@@ -314,10 +315,8 @@ gltfLoader.load("./scene.glb", (gltf) => {
       modelActions.push(action);
     });
 
-    // === SINCRONIZAR MODELO CUANDO LA CÁMARA LOOP ===
     mixer.addEventListener("loop", (e) => {
       if (e.action === cameraAction) {
-        // Reiniciar TODAS las animaciones del modelo
         modelActions.forEach(a => {
           a.reset();
           a.play();
@@ -325,6 +324,15 @@ gltfLoader.load("./scene.glb", (gltf) => {
       }
     });
   }
+
+  // =====================================================
+  // ESCENA LISTA → ACTIVAR ANIMACIONES
+  // =====================================================
+  setTimeout(() => {
+    ready = true;
+    clock.start();
+  }, 0);
+
 });
 
 
@@ -363,9 +371,12 @@ function animate() {
   requestAnimationFrame(animate);
 
   const delta = clock.getDelta();
-  if (mixer) mixer.update(delta);
 
-  if (mixer) {
+  // SOLO CUANDO ready === true
+  if (ready && mixer) {
+
+    mixer.update(delta);
+
     const tiempo = mixer.time;
     const fps = 24;
     const frame = Math.floor(tiempo * fps);
