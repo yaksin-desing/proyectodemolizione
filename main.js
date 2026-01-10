@@ -103,7 +103,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   500
 );
-camera.position.set(0, 1, 0);
+camera.position.set(0, 1, 10);
 
 
 // ========= RENDERER =========
@@ -253,7 +253,7 @@ let mixer = null;
 let cameraGLB = null;
 const clock = new THREE.Clock();
 
-gltfLoader.load("./scene.glb", (gltf) => {
+gltfLoader.load("./scenedos.glb", (gltf) => {
   const root = gltf.scene;
   scene.add(root);
 
