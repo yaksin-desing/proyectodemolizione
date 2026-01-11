@@ -66,33 +66,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
 
-// // ========= LUZ DIRECCIONAL =========
-// const dirLight = new THREE.DirectionalLight(0xffffff, 7);
-// dirLight.position.set(5, 4, 0); // altura y dirección de luz
-// dirLight.castShadow = false;
 
-// // Config sombra suave
-// dirLight.shadow.mapSize.width = 2048;
-// dirLight.shadow.mapSize.height = 2048;
-// dirLight.shadow.camera.near = 0.5;
-// dirLight.shadow.camera.far = 50;
-
-// // Ampliar área de sombras para que no se corten
-// dirLight.shadow.camera.left = -20;
-// dirLight.shadow.camera.right = 20;
-// dirLight.shadow.camera.top = 20;
-// dirLight.shadow.camera.bottom = -20;
-
-// scene.add(dirLight);
-
-// // Opcional: helper para ver desde dónde ilumina
-// const dirHelper = new THREE.DirectionalLightHelper(dirLight, 3);
-// scene.add(dirHelper);
-
-// // ========= LUZ DIRECCIONAL =========
-// const dirLight2 = new THREE.DirectionalLight(0xffffff, 7);
-// dirLight2.position.set(-5, 4, 0); // altura y dirección de luz
-// scene.add(dirLight2);
 
 
 
@@ -129,9 +103,9 @@ composer.addPass(renderPass);
 
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
+  0.2,
   0.1,
-  0.1,
-  0.0
+  0.3
 );
 composer.addPass(bloomPass);
 
@@ -147,12 +121,12 @@ controls.update();
 
 
 // --- Luz 1 ---
-const rectLight1 = new THREE.RectAreaLight(0xffffff, 7, 11, 3);
+const rectLight1 = new THREE.RectAreaLight(0xffffff, 7, 17, 3);
 const holder1 = new THREE.Object3D();
 holder1.add(rectLight1);
 
 // posición personalizable
-holder1.position.set(4, 4.3, -1);   // <<--- cambia aquí
+holder1.position.set(4, 10, -1);   // <<--- cambia aquí
 holder1.rotation.set(Math.PI / -2, 0, Math.PI / 2);   // <<--- rota aquí
 
 scene.add(holder1);
@@ -162,12 +136,12 @@ const helper1 = new RectAreaLightHelper(rectLight1);
 rectLight1.add(helper1);
 
 // --- Luz 2 ---
-const rectLight2 = new THREE.RectAreaLight(0xffffff, 7, 11, 3);
+const rectLight2 = new THREE.RectAreaLight(0xffffff, 7, 17, 3);
 const holder2 = new THREE.Object3D();
 holder2.add(rectLight2);
 
 // posición personalizable
-holder2.position.set(-4, 4.3, -1); // <<--- cambia aquí
+holder2.position.set(-4, 10, -1); // <<--- cambia aquí
 holder2.rotation.set(Math.PI / -2, 0, Math.PI / 2); // <<--- rota aquí
 
 scene.add(holder2);
@@ -179,22 +153,22 @@ rectLight2.add(helper2);
 // --- Luz pantalla ---
 const rectLight3 = new THREE.RectAreaLight(0x78a8ff, 3, 17, 4.4);
 const holder3 = new THREE.Object3D();
-holder3.add(rectLight3);
+//holder3.add(rectLight3);
 
 // posición personalizable
 holder3.position.set(0, 2.7, -6.7); // <<--- cambia aquí
 holder3.rotation.set(0, Math.PI / -1, 0); // <<--- rota aquí
 
-scene.add(holder3);
+//scene.add(holder3);
 
 // Helper luz 3
 const helper3 = new RectAreaLightHelper(rectLight3);
-rectLight3.add(helper3);
+//rectLight3.add(helper3);
 
 
 
 // ========= PISO =========
-const floorGeo = new THREE.PlaneGeometry(30, 20);
+const floorGeo = new THREE.PlaneGeometry(20, 50);
 const textureLoader = new THREE.TextureLoader();
 
 const displacementMap = textureLoader.load("marmol_disp.png");
@@ -244,7 +218,7 @@ const reflectiveFloor = new Reflector(reflectorGeometry, {
 
 reflectiveFloor.rotation.x = -Math.PI / 2;
 reflectiveFloor.position.y = -0.099;
-scene.add(reflectiveFloor);
+//scene.add(reflectiveFloor);
 
 
 // ========= CARGA MODELO =========
