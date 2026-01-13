@@ -72,7 +72,7 @@ scene.background = new THREE.Color(0x000000);
 
 // ========= CÁMARA =========
 const camera = new THREE.PerspectiveCamera(
-  75,
+  40,
   window.innerWidth / window.innerHeight,
   0.1,
   500
@@ -107,7 +107,7 @@ const bloomPass = new UnrealBloomPass(
   0.1,
   0.3
 );
-composer.addPass(bloomPass);
+//composer.addPass(bloomPass);
 
 
 // ========= ORBIT CONTROLS =========
@@ -121,13 +121,13 @@ controls.update();
 
 
 // --- Luz 1 ---
-const rectLight1 = new THREE.RectAreaLight(0xffffff, 7, 17, 3);
+const rectLight1 = new THREE.RectAreaLight(0xffffff, 10, 17, 3);
 const holder1 = new THREE.Object3D();
 holder1.add(rectLight1);
 
 // posición personalizable
-holder1.position.set(4, 10, -1);   // <<--- cambia aquí
-holder1.rotation.set(Math.PI / -2, 0, Math.PI / 2);   // <<--- rota aquí
+holder1.position.set(0, 4, -5);   // <<--- cambia aquí
+holder1.rotation.set(Math.PI / -2, 0, Math.PI / 1);   // <<--- rota aquí
 
 scene.add(holder1);
 
@@ -136,13 +136,13 @@ const helper1 = new RectAreaLightHelper(rectLight1);
 rectLight1.add(helper1);
 
 // --- Luz 2 ---
-const rectLight2 = new THREE.RectAreaLight(0xffffff, 7, 17, 3);
+const rectLight2 = new THREE.RectAreaLight(0xffffff, 10, 17, 3);
 const holder2 = new THREE.Object3D();
 holder2.add(rectLight2);
 
 // posición personalizable
-holder2.position.set(-4, 10, -1); // <<--- cambia aquí
-holder2.rotation.set(Math.PI / -2, 0, Math.PI / 2); // <<--- rota aquí
+holder2.position.set(0, 4, 0); // <<--- cambia aquí
+holder2.rotation.set(Math.PI / -2, 0, Math.PI / 1); // <<--- rota aquí
 
 scene.add(holder2);
 
@@ -150,25 +150,28 @@ scene.add(holder2);
 const helper2 = new RectAreaLightHelper(rectLight2);
 rectLight2.add(helper2);
 
-// --- Luz pantalla ---
-const rectLight3 = new THREE.RectAreaLight(0x78a8ff, 3, 17, 4.4);
+
+// --- Luz 2 ---
+const rectLight3 = new THREE.RectAreaLight(0xffffff, 10, 17, 3);
 const holder3 = new THREE.Object3D();
-//holder3.add(rectLight3);
+holder3.add(rectLight3);
 
 // posición personalizable
-holder3.position.set(0, 2.7, -6.7); // <<--- cambia aquí
-holder3.rotation.set(0, Math.PI / -1, 0); // <<--- rota aquí
+holder3.position.set(0, 4, 5); // <<--- cambia aquí
+holder3.rotation.set(Math.PI / -2, 0, Math.PI / 1); // <<--- rota aquí
 
-//scene.add(holder3);
+scene.add(holder3);
 
-// Helper luz 3
+// Helper luz 2
 const helper3 = new RectAreaLightHelper(rectLight3);
-//rectLight3.add(helper3);
+rectLight2.add(helper3);
+
+
 
 
 
 // ========= PISO =========
-const floorGeo = new THREE.PlaneGeometry(20, 50);
+const floorGeo = new THREE.PlaneGeometry(50, 50);
 const textureLoader = new THREE.TextureLoader();
 
 const displacementMap = textureLoader.load("marmol_disp.png");
@@ -311,9 +314,9 @@ gltfLoader.load("./scenedos.glb", (gltf) => {
 
 
 // ========= STATS =========
-const stats = new Stats();
-stats.showPanel(0);
-document.body.appendChild(stats.dom);
+//const stats = new Stats();
+//stats.showPanel(0);
+//document.body.appendChild(stats.dom);
 
 
 // =====================================================
@@ -341,7 +344,7 @@ function smoothBlink(cfg, frame, fps) {
 
 // ========= LOOP =========
 function animate() {
-  stats.begin();
+  //stats.begin();
   requestAnimationFrame(animate);
 
   const delta = clock.getDelta();
@@ -371,7 +374,7 @@ function animate() {
   renderPass.camera = cameraGLB || camera;
   composer.render();
 
-  stats.end();
+  //stats.end();
 }
 
 animate();
