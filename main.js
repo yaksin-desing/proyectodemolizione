@@ -20,11 +20,11 @@ const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
   || window.innerWidth < 768;
 
 const QUALITY = {
-  pixelRatio:    isMobile ? 1.0   : Math.min(devicePixelRatio, 2),
-  renderScale:   isMobile ? 0.75  : 1.0,
+  pixelRatio:    isMobile ? 1.5   : Math.min(devicePixelRatio, 2),
+  renderScale:   isMobile ? 0.77  : 1.0,
   shadows:       isMobile ? false : true,
   shadowMapSize: isMobile ? 512   : 1024,
-  lightHelpers:  isMobile ? false : true,
+  lightHelpers:  isMobile ? true : true,
   throttle30fps: isMobile ? true  : false,
 };
 
