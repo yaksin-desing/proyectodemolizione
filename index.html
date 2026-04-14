@@ -1,33 +1,92 @@
 <!doctype html>
 <html lang="es">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Three.js Demolizione</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Three.js Demolizione</title>
 
-<!-- ES MODULE SHIMS (permite usar importmap en Chrome/Edge/Firefox) -->
-<script async src="https://unpkg.com/es-module-shims@1.7.3/dist/es-module-shims.js"></script>
+  <!--
+    CRÍTICO: esms-shim-mode="manual" + shimMode forzado
+    garantiza que el importmap esté listo ANTES de que
+    main.js intente resolver "three" y "three/addons/".
+    Sin esto el loader puede no aparecer si el shim llega tarde.
+  -->
+  <script>window.esmsInitOptions = { shimMode: true }</script>
+  <script async src="https://unpkg.com/es-module-shims@1.7.3/dist/es-module-shims.js"></script>
 
-<!-- IMPORTMAP PARA THREE r165 -->
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+  <script type="importmap-shim">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+    }
   }
-}
-</script>
+  </script>
 
+  <link rel="stylesheet" href="loader.css">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      background: #000;
+    }
+
+    #canvas-container {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
 </head>
-<style>
-html, body { width: 100%; height: 100%; margin: 0; }
-#canvas-container { width: 100vw; height: 100vh; overflow: hidden; }
-canvas { display: block; }
-.stats { position: absolute; left: 0; top: 0; }
-</style>
-</head>
+
 <body>
-<div id="canvas-container"></div>
-<script type="module" src="./main.js"></script>
+
+  <!-- ================================================
+       LOADER
+       Aparece inmediatamente al cargar la página.
+       Se oculta cuando loaderDone() es llamado en main.js
+       ================================================ -->
+  <div id="loader-overlay">
+    <div id="loader-corner"></div>
+    <h1 id="loader-title">Autodemolicione<span>.</span></h1>
+    <p id="loader-subtitle">Experience Loading</p>
+    <div id="loader-bar-wrap">
+      <div id="loader-bar-track">
+        <div id="loader-bar-fill"></div>
+      </div>
+      <div id="loader-percent">
+        <span>0%</span>
+        <span id="loader-percent-num">0%</span>
+      </div>
+    </div>
+    <p id="loader-status">Iniciando escena</p>
+  </div>
+
+  <!-- Botones de navegación (por encima del canvas) -->
+  <div id="controls">
+    <button id="prev">⬅ Atrás</button>
+    <button id="next">Siguiente ➡</button>
+  </div>
+
+  <!-- Canvas Three.js -->
+  <div id="canvas-container"></div>
+
+  <!--
+    IMPORTANTE:
+    - Usar type="module-shim" (no "module") para que
+      es-module-shims resuelva el importmap correctamente.
+    - loader.js NO se carga aquí; main.js lo importa.
+  -->
+  <script type="module-shim" src="./main.js"></script>
+
 </body>
 </html>
