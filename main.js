@@ -84,7 +84,6 @@ camera.position.set(0, 1, 10);
 const renderer = new THREE.WebGLRenderer({
   antialias: true,
   alpha: true,
-
 });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -230,7 +229,7 @@ let mixer = null;
 let cameraGLB = null;
 const clock = new THREE.Clock();
 
-gltfLoader.load("./scenedos.glb", (gltf) => {
+gltfLoader.load("./escenaparaproyectofrancesco2.glb", (gltf) => {
   const root = gltf.scene;
   scene.add(root);
 
@@ -295,8 +294,8 @@ gltfLoader.load("./scenedos.glb", (gltf) => {
     mixer.addEventListener("loop", (e) => {
       if (e.action === cameraAction) {
         modelActions.forEach(a => {
-          a.reset();
-          a.play();
+          //a.reset();
+          //a.play();
         });
       }
     });
@@ -314,9 +313,9 @@ gltfLoader.load("./scenedos.glb", (gltf) => {
 
 
 // ========= STATS =========
-//const stats = new Stats();
-//stats.showPanel(0);
-//document.body.appendChild(stats.dom);
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
 
 
 // =====================================================
@@ -344,7 +343,7 @@ function smoothBlink(cfg, frame, fps) {
 
 // ========= LOOP =========
 function animate() {
-  //stats.begin();
+  stats.begin();
   requestAnimationFrame(animate);
 
   const delta = clock.getDelta();
@@ -374,7 +373,7 @@ function animate() {
   renderPass.camera = cameraGLB || camera;
   composer.render();
 
-  //stats.end();
+  stats.end();
 }
 
 animate();
