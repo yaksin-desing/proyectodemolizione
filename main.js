@@ -63,7 +63,7 @@ const PROFILE_MOBILE_HIGH = { // iPhone o Android gama alta
   shadows: true,
   shadowMapSize: 512,
   lightHelpers: true,
-  throttle30fps: false,
+  throttle30fps: true,
 };
 
 const PROFILE_MOBILE_LOW = { // Android gama baja
