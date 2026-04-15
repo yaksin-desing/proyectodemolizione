@@ -14,19 +14,59 @@ RectAreaLightUniformsLib.init();
 
 
 // =====================================================
-// DETECCIÓN DE DISPOSITIVO Y PERFIL DE CALIDAD
+// DETECCIÓN DE DISPOSITIVO
 // =====================================================
-const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
-  || window.innerWidth < 768;
+const isAndroid  = /Android/i.test(navigator.userAgent);
+const isIOS      = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+const isMobile   = isAndroid || isIOS || window.innerWidth < 768;
 
-const QUALITY = {
-  pixelRatio:    isMobile ? 1.5   : Math.min(devicePixelRatio, 2),
-  renderScale:   isMobile ? 0.77  : 1.0,
-  shadows:       isMobile ? false : true,
-  shadowMapSize: isMobile ? 512   : 1024,
-  lightHelpers:  isMobile ? true : true,
-  throttle30fps: isMobile ? true  : false,
+// Gama baja: menos de 4GB RAM (navigator.deviceMemory)
+// o menos de 4 núcleos (navigator.hardwareConcurrency)
+// Ambas APIs son estándar en Android Chrome; en iOS devuelven undefined (se trata como gama alta)
+const isLowEnd = (navigator.deviceMemory   && navigator.deviceMemory   < 4)
+              || (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4);
+
+// =====================================================
+// PERFILES DE CALIDAD
+// Cambia los valores de cada perfil a tu gusto
+// =====================================================
+
+const PROFILE_DESKTOP = {
+  pixelRatio:    Math.min(devicePixelRatio, 2),
+  renderScale:   1.0,
+  shadows:       true,
+  shadowMapSize: 1024,
+  lightHelpers:  true,
+  throttle30fps: false,
 };
+
+const PROFILE_MOBILE_HIGH = {   // iPhone o Android gama alta
+  pixelRatio:    2,
+  renderScale:   1,
+  shadows:       true,
+  shadowMapSize: 512,
+  lightHelpers:  false,
+  throttle30fps: false,
+};
+
+const PROFILE_MOBILE_LOW = {    // Android gama baja
+  pixelRatio:    1.5,
+  renderScale:   0.70,
+  shadows:       false,
+  shadowMapSize: 512,
+  lightHelpers:  true,
+  throttle30fps: true,
+};
+
+// Selector automático
+const QUALITY = !isMobile          ? PROFILE_DESKTOP
+              : (isAndroid && isLowEnd) ? PROFILE_MOBILE_LOW
+              : PROFILE_MOBILE_HIGH;
+
+console.log('[Quality]', 
+  !isMobile ? 'DESKTOP' : (isAndroid && isLowEnd) ? 'ANDROID GAMA BAJA' : 'MOBILE GAMA ALTA',
+  QUALITY
+);
 
 console.log(`[Quality] Modo: ${isMobile ? 'MOVIL' : 'DESKTOP'}`, QUALITY);
 
