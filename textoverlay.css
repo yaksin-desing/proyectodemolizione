@@ -1,0 +1,103 @@
+/* =====================================================
+   TEXT OVERLAY — Textos animados por frame
+   Importa este CSS en tu <head>:
+   <link rel="stylesheet" href="text-overlay.css">
+===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap');
+
+/* ── Variables — personaliza aquí ── */
+:root {
+  --text-color-title : #ffffff;
+  --text-color-body  : rgba(255, 255, 255, 0.72);
+  --text-accent      : #0033ff;
+  --text-font-title  : 'Bebas Neue', sans-serif;
+  --text-font-body   : 'DM Mono', monospace;
+  --text-pos-left    : 6vw;        /* distancia desde la izquierda */
+  --text-pos-bottom  : 12vh;       /* distancia desde abajo */
+  --text-anim-in     : 0.55s;      /* duración entrada */
+  --text-anim-out    : 0.35s;      /* duración salida */
+}
+
+/* ── Contenedor ── */
+/* DESPUÉS */
+#scene-text {
+  position  : fixed;
+  left      : 50%;
+  bottom    : var(--text-pos-bottom);
+  transform : translateX(-50%);
+  z-index   : 100;
+  pointer-events : none;
+  max-width : min(520px, 80vw);
+  text-align: center;
+}
+
+/* ── Título h1 ── */
+#scene-title {
+  font-family    : var(--text-font-title);
+  font-size      : clamp(0.9rem, 2vw, 1rem);
+  color          : var(--text-color-title);
+  letter-spacing : 0.08em;
+  line-height    : 1;
+  margin         : 0 0 10px 0;
+  padding        : 0;
+
+  /* Estado inicial: invisible */
+  opacity   : 0;
+  transform : translateY(18px);
+}
+
+/* ── Párrafo p ── */
+#scene-body {
+  font-family    : var(--text-font-body);
+  font-size      : clamp(0.5rem, 1.2vw, 0.7rem);
+  color          : var(--text-color-body);
+  letter-spacing : 0.18em;
+  line-height    : 1.7;
+  margin         : 0;
+  padding        : 0;
+
+  opacity   : 0;
+  transform : translateY(12px);
+}
+
+
+
+
+
+
+/* =====================================================
+   ESTADOS DE ANIMACIÓN
+===================================================== */
+
+/* ENTRADA */
+#scene-title.enter {
+  animation: textSlideUp var(--text-anim-in) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+#scene-body.enter {
+  animation: textSlideUp var(--text-anim-in) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: 0.1s;
+}
+
+/* SALIDA */
+#scene-title.exit {
+  animation: textFadeDown var(--text-anim-out) ease forwards;
+}
+#scene-body.exit {
+  animation: textFadeDown var(--text-anim-out) ease forwards;
+  animation-delay: 0s;
+}
+
+
+/* =====================================================
+   KEYFRAMES
+===================================================== */
+@keyframes textSlideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes textFadeDown {
+  from { opacity: 1; transform: translateY(0);    }
+  to   { opacity: 0; transform: translateY(-8px); }
+}

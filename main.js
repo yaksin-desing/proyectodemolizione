@@ -9,6 +9,8 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
 import { loaderSetProgress, loaderDone } from './loader.js';
+import { initTextOverlay, updateTextByFrame } from './text-overlay.js'; // ← NUEVO
+
 
 RectAreaLightUniformsLib.init();
 
@@ -54,22 +56,15 @@ let ready = false;
 
 // =====================================================
 // CONFIG OBJ PARPADEO
-// CORRECCIÓN: se añade campo "material" a cada entrada.
-// Ahora soporta meshes con material único Y con array de materiales.
 // =====================================================
 const colorConfigs = [
   { name: "llanta_derecha",   frameStart: 365, frameEnd: 395, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
   { name: "rin_derecho",      frameStart: 365, frameEnd: 395, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
   { name: "disco_derecho",    frameStart: 365, frameEnd: 395, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
   { name: "pastilla_derecha", frameStart: 365, frameEnd: 395, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
-  { name: "front windows",    frameStart: 535, frameEnd: 575, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
   { name: "farol",            frameStart: 535, frameEnd: 575, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
-  { name: "Plane.001",        frameStart: 535, frameEnd: 575, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
-  { name: "Plane.003",        frameStart: 535, frameEnd: 575, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
-  { name: "headlight",        frameStart: 535, frameEnd: 575, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
   { name: "direccional",      frameStart: 535, frameEnd: 575, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
   { name: "luces",            frameStart: 535, frameEnd: 575, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
-  { name: "logo",             frameStart: 631, frameEnd: 672, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
   { name: "side.002",         frameStart: 631, frameEnd: 672, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
   { name: "text.003",         frameStart: 631, frameEnd: 672, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
   { name: "front body",       frameStart: 725, frameEnd: 775, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
@@ -80,7 +75,6 @@ const colorConfigs = [
   { name: "door",             frameStart: 725, frameEnd: 775, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
   { name: "roof",             frameStart: 725, frameEnd: 775, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
   { name: "retrovisores",     frameStart: 725, frameEnd: 775, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
-  
 ];
 
 
@@ -201,25 +195,15 @@ gltfLoader.load(
     const root = gltf.scene;
     scene.add(root);
 
-    // ── CORRECCIÓN: soporte para material único y array de materiales ──
     colorConfigs.forEach(cfg => {
       const obj = root.getObjectByName(cfg.name);
+      if (!obj) { console.warn(`[Parpadeo] No encontrado: "${cfg.name}"`); return; }
 
-      if (!obj) {
-        console.warn(`[Parpadeo] No encontrado: "${cfg.name}"`);
-        return;
-      }
-
-      // Si material es array toma el primero; si es único lo usa directo
       const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-
-      if (!mat || !mat.color) {
-        console.warn(`[Parpadeo] Sin color en material de: "${cfg.name}"`);
-        return;
-      }
+      if (!mat || !mat.color) { console.warn(`[Parpadeo] Sin color en: "${cfg.name}"`); return; }
 
       cfg.mesh          = obj;
-      cfg.material      = mat;                  // ← referencia directa al material
+      cfg.material      = mat;
       cfg.originalColor = mat.color.clone();
     });
 
@@ -241,20 +225,15 @@ gltfLoader.load(
         if (isMobile && obj.material) {
           const isBlinkMesh = colorConfigs.some(c => c.name === obj.name);
           if (!isBlinkMesh) {
-            // Normalizar a array para iterar de forma uniforme
             const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-            obj.material = mats.map(old => {
+            const converted = mats.map(old => {
               if (!old.isMeshPhysicalMaterial) return old;
               return new THREE.MeshStandardMaterial({
-                color:     old.color,
-                roughness: old.roughness,
-                metalness: old.metalness,
-                map:       old.map       || null,
-                normalMap: old.normalMap || null,
+                color: old.color, roughness: old.roughness, metalness: old.metalness,
+                map: old.map || null, normalMap: old.normalMap || null,
               });
             });
-            // Si era un solo material, desenvuelve el array
-            if (obj.material.length === 1) obj.material = obj.material[0];
+            obj.material = converted.length === 1 ? converted[0] : converted;
           }
         }
       }
@@ -302,6 +281,7 @@ gltfLoader.load(
       ready = true;
       clock.start();
       loaderDone();
+      initTextOverlay(); // ← NUEVO: inicializa el sistema de textos
     }, 0);
   },
 
@@ -309,21 +289,18 @@ gltfLoader.load(
     if (xhr.lengthComputable) loaderSetProgress((xhr.loaded / xhr.total) * 100);
   },
 
-  (err) => {
-    console.error('Error cargando el modelo:', err);
-  }
+  (err) => { console.error('Error cargando el modelo:', err); }
 );
 
 
-// ========= STATS =========
-const stats = new Stats();
-stats.showPanel(0);
-document.body.appendChild(stats.dom);
+// ========= STATS (PARA VERL EL RENIDIMIENTO) =========
+//const stats = new Stats();
+//stats.showPanel(0);
+//document.body.appendChild(stats.dom);
 
 
 // =====================================================
 // PARPADEO AZUL
-// CORRECCIÓN: usa cfg.material en lugar de cfg.mesh.material
 // =====================================================
 function smoothBlink(cfg, frame) {
   const durationFrames = cfg.frameEnd - cfg.frameStart;
@@ -332,10 +309,8 @@ function smoothBlink(cfg, frame) {
   const localFrame     = frame - cfg.frameStart;
   const blinkIndex     = Math.floor(localFrame / blinkDuration);
 
-  if (blinkIndex >= totalBlinks) {
-    cfg.material.color.copy(cfg.originalColor);
-    return;
-  }
+  if (blinkIndex >= totalBlinks) { cfg.material.color.copy(cfg.originalColor); return; }
+
   const phase     = (localFrame % blinkDuration) / blinkDuration;
   const intensity = Math.sin(phase * Math.PI);
   cfg.material.color.copy(cfg.originalColor).lerp(cfg.colorAlt, intensity);
@@ -356,7 +331,7 @@ function animate(timestamp) {
   if (QUALITY.throttle30fps && (timestamp - lastFrameTime < FRAME_MIN_MS)) return;
   lastFrameTime = timestamp;
 
-  stats.begin();
+  //stats.begin();
 
   const delta = clock.getDelta();
 
@@ -366,21 +341,23 @@ function animate(timestamp) {
     const fps   = 24;
     const frame = Math.floor(mixer.time * fps);
 
+    // Parpadeo azul
     colorConfigs.forEach(cfg => {
-      // CORRECCIÓN: chequea cfg.material (no cfg.mesh.material)
       if (!cfg.mesh || !cfg.material) return;
-
       if (frame >= cfg.frameStart && frame <= cfg.frameEnd) {
         smoothBlink(cfg, frame);
       } else {
         cfg.material.color.copy(cfg.originalColor);
       }
     });
+
+    // Textos por frame ← NUEVO
+    updateTextByFrame(frame);
   }
 
   if (!cameraGLB) controls.update();
   composer.render();
-  stats.end();
+  //stats.end();
 }
 
 requestAnimationFrame(animate);
