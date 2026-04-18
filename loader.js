@@ -20,12 +20,12 @@ function getEls() {
 // Edita este array para personalizar los textos
 // =====================================================
 const STATUS_MESSAGES = [
-  'Iniciando escena',
-  'Cargando geometría',
-  'Aplicando materiales',
-  'Configurando luces',
-  'Preparando animaciones',
-  'Listo',
+  'Avvio della scena',
+  'Caricamento della geometria',
+  'Applicazione dei materiali',
+  'Configurazione delle luci',
+  'Preparazione delle animazioni',
+  'Pronto',
 ];
 
 function getStatusMessage(progress) {

@@ -4,9 +4,9 @@
    ===================================================== */
 :root {
   --loader-bg:          #000000;       /* Fondo del loader */
-  --loader-accent:      #0033ff;       /* Color acento (azul igual que el parpadeo) */
+  --loader-accent:      #ffffff;       /* Color acento (azul igual que el parpadeo) */
   --loader-text:        #ffffff;       /* Color del texto */
-  --loader-text-dim:    rgba(255,255,255,0.3); /* Texto secundario */
+  --loader-text-dim:    rgb(255, 255, 255); /* Texto secundario */
   --loader-bar-bg:      rgba(255,255,255,0.08); /* Fondo de la barra */
   --loader-bar-fill:    #0033ff;       /* Color de relleno de la barra */
   --loader-font-title:  'Bebas Neue', sans-serif; /* Fuente del título */

@@ -1,31 +1,14 @@
 import * as THREE from "three";
-import {
-  GLTFLoader
-} from "three/addons/loaders/GLTFLoader.js";
-import {
-  OrbitControls
-} from "three/addons/controls/OrbitControls.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import Stats from "three/addons/libs/stats.module.js";
-import {
-  RectAreaLightUniformsLib
-} from "three/addons/lights/RectAreaLightUniformsLib.js";
-import {
-  RectAreaLightHelper
-} from "three/addons/helpers/RectAreaLightHelper.js";
-import {
-  EffectComposer
-} from "three/addons/postprocessing/EffectComposer.js";
-import {
-  RenderPass
-} from "three/addons/postprocessing/RenderPass.js";
-import {
-  UnrealBloomPass
-} from "three/addons/postprocessing/UnrealBloomPass.js";
+import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
+import { RectAreaLightHelper } from "three/addons/helpers/RectAreaLightHelper.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
-import {
-  loaderSetProgress,
-  loaderDone
-} from './loader.js';
+import { loaderSetProgress, loaderDone } from './loader.js';
 
 RectAreaLightUniformsLib.init();
 
@@ -34,58 +17,33 @@ RectAreaLightUniformsLib.init();
 // DETECCIÓN DE DISPOSITIVO
 // =====================================================
 const isAndroid = /Android/i.test(navigator.userAgent);
-const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-const isMobile = isAndroid || isIOS || window.innerWidth < 768;
+const isIOS     = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+const isMobile  = isAndroid || isIOS || window.innerWidth < 768;
 
-// Gama baja: menos de 4GB RAM (navigator.deviceMemory)
-// o menos de 4 núcleos (navigator.hardwareConcurrency)
-// Ambas APIs son estándar en Android Chrome; en iOS devuelven undefined (se trata como gama alta)
-const isLowEnd = (navigator.deviceMemory && navigator.deviceMemory < 4) ||
-  (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4);
-
-// =====================================================
-// PERFILES DE CALIDAD
-// Cambia los valores de cada perfil a tu gusto
-// =====================================================
+const isLowEnd  = (navigator.deviceMemory       && navigator.deviceMemory       < 4)
+               || (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4);
 
 const PROFILE_DESKTOP = {
-  pixelRatio: Math.min(devicePixelRatio, 2),
-  renderScale: 1.0,
-  shadows: true,
-  shadowMapSize: 1024,
-  lightHelpers: true,
-  throttle30fps: false,
+  pixelRatio: Math.min(devicePixelRatio, 2), renderScale: 1,
+  shadows: true,  shadowMapSize: 1024, lightHelpers: true,  throttle30fps: false,
+};
+const PROFILE_MOBILE_HIGH = {
+  pixelRatio: 1.7, renderScale: 1,
+  shadows: true,  shadowMapSize: 512,  lightHelpers: true,  throttle30fps: true,
+};
+const PROFILE_MOBILE_LOW = {
+  pixelRatio: 1.5, renderScale: 0.7,
+  shadows: false, shadowMapSize: 512,  lightHelpers: true,  throttle30fps: true,
 };
 
-const PROFILE_MOBILE_HIGH = { // iPhone o Android gama alta
-  pixelRatio: 1.7,
-  renderScale: 1,
-  shadows: true,
-  shadowMapSize: 512,
-  lightHelpers: true,
-  throttle30fps: true,
-};
-
-const PROFILE_MOBILE_LOW = { // Android gama baja
-  pixelRatio: 1.5,
-  renderScale: 0.,
-  shadows: false,
-  shadowMapSize: 512,
-  lightHelpers: true,
-  throttle30fps: true,
-};
-
-// Selector automático
-const QUALITY = !isMobile ? PROFILE_DESKTOP :
-  (isAndroid && isLowEnd) ? PROFILE_MOBILE_LOW :
-  PROFILE_MOBILE_HIGH;
+const QUALITY = !isMobile             ? PROFILE_DESKTOP
+              : (isAndroid && isLowEnd) ? PROFILE_MOBILE_LOW
+              : PROFILE_MOBILE_HIGH;
 
 console.log('[Quality]',
   !isMobile ? 'DESKTOP' : (isAndroid && isLowEnd) ? 'ANDROID GAMA BAJA' : 'MOBILE GAMA ALTA',
   QUALITY
 );
-
-console.log(`[Quality] Modo: ${isMobile ? 'MOVIL' : 'DESKTOP'}`, QUALITY);
 
 
 // =====================================================
@@ -96,39 +54,33 @@ let ready = false;
 
 // =====================================================
 // CONFIG OBJ PARPADEO
+// CORRECCIÓN: se añade campo "material" a cada entrada.
+// Ahora soporta meshes con material único Y con array de materiales.
 // =====================================================
-const colorConfigs = [{
-    name: "llanta_derecha",
-    frameStart: 365,
-    frameEnd: 430,
-    colorAlt: new THREE.Color(0, 0.2, 1),
-    mesh: null,
-    originalColor: null
-  },
-  {
-    name: "rin_derecho",
-    frameStart: 365,
-    frameEnd: 430,
-    colorAlt: new THREE.Color(0, 0.2, 1),
-    mesh: null,
-    originalColor: null
-  },
-  {
-    name: "disco_derecho",
-    frameStart: 365,
-    frameEnd: 430,
-    colorAlt: new THREE.Color(0, 0.2, 1),
-    mesh: null,
-    originalColor: null
-  },
-  {
-    name: "pastilla_derecha",
-    frameStart: 365,
-    frameEnd: 430,
-    colorAlt: new THREE.Color(0, 0.2, 1),
-    mesh: null,
-    originalColor: null
-  },
+const colorConfigs = [
+  { name: "llanta_derecha",   frameStart: 365, frameEnd: 395, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "rin_derecho",      frameStart: 365, frameEnd: 395, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "disco_derecho",    frameStart: 365, frameEnd: 395, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "pastilla_derecha", frameStart: 365, frameEnd: 395, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "front windows",    frameStart: 535, frameEnd: 575, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "farol",            frameStart: 535, frameEnd: 575, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "Plane.001",        frameStart: 535, frameEnd: 575, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "Plane.003",        frameStart: 535, frameEnd: 575, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "headlight",        frameStart: 535, frameEnd: 575, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "direccional",      frameStart: 535, frameEnd: 575, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "luces",            frameStart: 535, frameEnd: 575, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "logo",             frameStart: 631, frameEnd: 672, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "side.002",         frameStart: 631, frameEnd: 672, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "text.003",         frameStart: 631, frameEnd: 672, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "front body",       frameStart: 725, frameEnd: 775, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "front grill",      frameStart: 725, frameEnd: 775, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "side body",        frameStart: 725, frameEnd: 775, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "front bumper.001", frameStart: 725, frameEnd: 775, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "door.001",         frameStart: 725, frameEnd: 775, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "door",             frameStart: 725, frameEnd: 775, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "roof",             frameStart: 725, frameEnd: 775, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  { name: "retrovisores",     frameStart: 725, frameEnd: 775, colorAlt: new THREE.Color(0, 0.2, 1), mesh: null, material: null, originalColor: null },
+  
 ];
 
 
@@ -142,7 +94,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
 
-// ========= CAMARA =========
+// ========= CÁMARA =========
 const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 500);
 camera.position.set(0, 1, 10);
 
@@ -153,23 +105,20 @@ const renderer = new THREE.WebGLRenderer({
   alpha: true,
   powerPreference: 'high-performance',
 });
-
 renderer.setPixelRatio(QUALITY.pixelRatio);
 
-const renderW = Math.floor(window.innerWidth * QUALITY.renderScale);
+const renderW = Math.floor(window.innerWidth  * QUALITY.renderScale);
 const renderH = Math.floor(window.innerHeight * QUALITY.renderScale);
 renderer.setSize(renderW, renderH, false);
-renderer.domElement.style.width = '100%';
+renderer.domElement.style.width  = '100%';
 renderer.domElement.style.height = '100%';
-
 renderer.shadowMap.enabled = QUALITY.shadows;
-renderer.shadowMap.type = QUALITY.shadows ? THREE.PCFSoftShadowMap : THREE.BasicShadowMap;
-
+renderer.shadowMap.type    = QUALITY.shadows ? THREE.PCFSoftShadowMap : THREE.BasicShadowMap;
 container.appendChild(renderer.domElement);
 
 
 // ========= POST-PROCESSING =========
-const composer = new EffectComposer(renderer);
+const composer   = new EffectComposer(renderer);
 const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
 
@@ -187,63 +136,50 @@ controls.update();
 
 // ========= LUCES RECT AREA =========
 function makeRectLight(w, h, px, py, pz, rx, ry, rz) {
-  const light = new THREE.RectAreaLight(0xffffff, 10, w, h);
+  const light  = new THREE.RectAreaLight(0xffffff, 10, w, h);
   const holder = new THREE.Object3D();
   holder.add(light);
   holder.position.set(px, py, pz);
   holder.rotation.set(rx, ry, rz);
   scene.add(holder);
-  if (QUALITY.lightHelpers) {
-    light.add(new RectAreaLightHelper(light));
-  }
+  if (QUALITY.lightHelpers) light.add(new RectAreaLightHelper(light));
   return light;
 }
 
-makeRectLight(17, 3, 0, 4, -5, Math.PI / -2, 0, Math.PI);
-makeRectLight(17, 3, 0, 4, 0, Math.PI / -2, 0, Math.PI);
-makeRectLight(17, 3, 0, 4, 5, Math.PI / -2, 0, Math.PI);
+makeRectLight(17, 3,  0, 4, -5,  Math.PI / -2, 0, Math.PI);
+makeRectLight(17, 3,  0, 4,  0,  Math.PI / -2, 0, Math.PI);
+makeRectLight(17, 3,  0, 4,  5,  Math.PI / -2, 0, Math.PI);
 
 
 // ========= PISO =========
-const floorGeo = new THREE.PlaneGeometry(50, 50);
+const floorGeo      = new THREE.PlaneGeometry(50, 50);
 const textureLoader = new THREE.TextureLoader();
-let ceramicMaterial;
 
-if (isMobile) {
-  ceramicMaterial = new THREE.MeshStandardMaterial({
-    color: 0x181818,
-    roughness: 0.9,
-    metalness: 0.7,
-    transparent: true,
-    opacity: 0.7,
-  });
-} else {
-  const displacementMap = textureLoader.load("marmol_disp.png");
-  displacementMap.wrapS = displacementMap.wrapT = THREE.RepeatWrapping;
-  displacementMap.repeat.set(5, 5);
+const displacementMap = textureLoader.load("marmol_disp.png");
+displacementMap.wrapS = displacementMap.wrapT = THREE.RepeatWrapping;
+displacementMap.repeat.set(5, 5);
 
-  const normalMap = textureLoader.load("marmol_normal.jpg");
-  normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
-  normalMap.repeat.set(5, 5);
+const normalMap = textureLoader.load("marmol_normal.jpg");
+normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
+normalMap.repeat.set(5, 5);
 
-  const roughnessMap = textureLoader.load("marmol_rough.jpg");
-  roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping;
-  roughnessMap.repeat.set(5, 5);
+const roughnessMap = textureLoader.load("marmol_rough.jpg");
+roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping;
+roughnessMap.repeat.set(5, 5);
 
-  ceramicMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0x181818,
-    roughness: 0.9,
-    metalness: 0.7,
-    roughnessMap,
-    displacementMap,
-    displacementScale: 0.02,
-    transparent: true,
-    opacity: 0.7,
-    clearcoat: 0,
-    clearcoatRoughness: 1,
-    envMapIntensity: 0,
-  });
-}
+const ceramicMaterial = new THREE.MeshPhysicalMaterial({
+  color: 0x181818,
+  roughness: 0.9,
+  metalness: 0.7,
+  roughnessMap,
+  displacementMap,
+  displacementScale: 0.02,
+  transparent: true,
+  opacity: 0.7,
+  clearcoat: 0,
+  clearcoatRoughness: 1,
+  envMapIntensity: 0,
+});
 
 const ceramicLayer = new THREE.Mesh(floorGeo, ceramicMaterial);
 ceramicLayer.rotation.x = -Math.PI / 2;
@@ -254,9 +190,9 @@ scene.add(ceramicLayer);
 
 // ========= CARGA MODELO =========
 const gltfLoader = new GLTFLoader();
-let mixer = null;
+let mixer     = null;
 let cameraGLB = null;
-const clock = new THREE.Clock();
+const clock   = new THREE.Clock();
 
 gltfLoader.load(
   "./escenaparaproyectofrancesco2.glb",
@@ -265,40 +201,60 @@ gltfLoader.load(
     const root = gltf.scene;
     scene.add(root);
 
+    // ── CORRECCIÓN: soporte para material único y array de materiales ──
     colorConfigs.forEach(cfg => {
       const obj = root.getObjectByName(cfg.name);
-      if (obj) {
-        cfg.mesh = obj;
-        cfg.originalColor = obj.material.color.clone();
+
+      if (!obj) {
+        console.warn(`[Parpadeo] No encontrado: "${cfg.name}"`);
+        return;
       }
+
+      // Si material es array toma el primero; si es único lo usa directo
+      const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
+
+      if (!mat || !mat.color) {
+        console.warn(`[Parpadeo] Sin color en material de: "${cfg.name}"`);
+        return;
+      }
+
+      cfg.mesh          = obj;
+      cfg.material      = mat;                  // ← referencia directa al material
+      cfg.originalColor = mat.color.clone();
     });
 
     root.traverse((obj) => {
       if (obj.isCamera) {
         cameraGLB = obj;
         controls.enabled = false;
-        cameraGLB.fov = 75;
+        cameraGLB.fov    = 75;
         cameraGLB.aspect = window.innerWidth / window.innerHeight;
-        cameraGLB.near = 0.1;
-        cameraGLB.far = 500;
+        cameraGLB.near   = 0.1;
+        cameraGLB.far    = 500;
         cameraGLB.updateProjectionMatrix();
       }
 
       if (obj.isMesh) {
-        obj.castShadow = QUALITY.shadows;
+        obj.castShadow    = QUALITY.shadows;
         obj.receiveShadow = QUALITY.shadows;
 
         if (isMobile && obj.material) {
           const isBlinkMesh = colorConfigs.some(c => c.name === obj.name);
-          if (!isBlinkMesh && obj.material.isMeshPhysicalMaterial) {
-            const old = obj.material;
-            obj.material = new THREE.MeshStandardMaterial({
-              color: old.color,
-              roughness: old.roughness,
-              metalness: old.metalness,
-              map: old.map || null,
-              normalMap: old.normalMap || null,
+          if (!isBlinkMesh) {
+            // Normalizar a array para iterar de forma uniforme
+            const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+            obj.material = mats.map(old => {
+              if (!old.isMeshPhysicalMaterial) return old;
+              return new THREE.MeshStandardMaterial({
+                color:     old.color,
+                roughness: old.roughness,
+                metalness: old.metalness,
+                map:       old.map       || null,
+                normalMap: old.normalMap || null,
+              });
             });
+            // Si era un solo material, desenvuelve el array
+            if (obj.material.length === 1) obj.material = obj.material[0];
           }
         }
       }
@@ -308,8 +264,8 @@ gltfLoader.load(
       mixer = new THREE.AnimationMixer(root);
       let cameraAction = null;
       let modelActions = [];
-      let cameraClip = null;
-      let modelClips = [];
+      let cameraClip   = null;
+      let modelClips   = [];
 
       gltf.animations.forEach((clip) => {
         const isCameraAnim = clip.tracks.some(t => t.name.toLowerCase().includes("camera"));
@@ -334,10 +290,7 @@ gltfLoader.load(
 
       mixer.addEventListener("loop", (e) => {
         if (e.action === cameraAction) {
-          modelActions.forEach(a => {
-            a.reset();
-            a.play();
-          });
+          modelActions.forEach(a => { a.reset(); a.play(); });
         }
       });
     }
@@ -370,28 +323,29 @@ document.body.appendChild(stats.dom);
 
 // =====================================================
 // PARPADEO AZUL
+// CORRECCIÓN: usa cfg.material en lugar de cfg.mesh.material
 // =====================================================
 function smoothBlink(cfg, frame) {
   const durationFrames = cfg.frameEnd - cfg.frameStart;
-  const totalBlinks = 3;
-  const blinkDuration = durationFrames / totalBlinks;
-  const localFrame = frame - cfg.frameStart;
-  const blinkIndex = Math.floor(localFrame / blinkDuration);
+  const totalBlinks    = 3;
+  const blinkDuration  = durationFrames / totalBlinks;
+  const localFrame     = frame - cfg.frameStart;
+  const blinkIndex     = Math.floor(localFrame / blinkDuration);
 
   if (blinkIndex >= totalBlinks) {
-    cfg.mesh.material.color.copy(cfg.originalColor);
+    cfg.material.color.copy(cfg.originalColor);
     return;
   }
-  const phase = (localFrame % blinkDuration) / blinkDuration;
+  const phase     = (localFrame % blinkDuration) / blinkDuration;
   const intensity = Math.sin(phase * Math.PI);
-  cfg.mesh.material.color.copy(cfg.originalColor).lerp(cfg.colorAlt, intensity);
+  cfg.material.color.copy(cfg.originalColor).lerp(cfg.colorAlt, intensity);
 }
 
 
 // =====================================================
-// THROTTLE 30 FPS (solo movil)
+// THROTTLE 30 FPS
 // =====================================================
-let lastFrameTime = 0;
+let lastFrameTime  = 0;
 const FRAME_MIN_MS = QUALITY.throttle30fps ? 1000 / 30 : 0;
 
 
@@ -408,15 +362,18 @@ function animate(timestamp) {
 
   if (ready && mixer) {
     mixer.update(delta);
-    const fps = 24;
+
+    const fps   = 24;
     const frame = Math.floor(mixer.time * fps);
 
     colorConfigs.forEach(cfg => {
-      if (!cfg.mesh || !cfg.mesh.material) return;
+      // CORRECCIÓN: chequea cfg.material (no cfg.mesh.material)
+      if (!cfg.mesh || !cfg.material) return;
+
       if (frame >= cfg.frameStart && frame <= cfg.frameEnd) {
         smoothBlink(cfg, frame);
       } else {
-        cfg.mesh.material.color.copy(cfg.originalColor);
+        cfg.material.color.copy(cfg.originalColor);
       }
     });
   }
