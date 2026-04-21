@@ -54,7 +54,7 @@ const PROFILE_DESKTOP = {
   throttle30fps: false,
 };
 const PROFILE_MOBILE_HIGH = {
-  pixelRatio: 1.7,
+  pixelRatio: 1.5,
   renderScale: 1,
   shadows: true,
   shadowMapSize: 512,
@@ -62,7 +62,7 @@ const PROFILE_MOBILE_HIGH = {
   throttle30fps: true,
 };
 const PROFILE_MOBILE_LOW = {
-  pixelRatio: 1.5,
+  pixelRatio: 1,
   renderScale: 0.7,
   shadows: false,
   shadowMapSize: 512,
