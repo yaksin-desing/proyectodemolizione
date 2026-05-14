@@ -358,28 +358,27 @@ const clock = new THREE.Clock();
 gltfLoader.load(
   "./escenaparaproyectofrancesco2.glb",
 
+  // ── onLoad ──────────────────────────────────────────────────────────────
   (gltf) => {
+    loaderSetProgress(77); // descarga completa
+
     const root = gltf.scene;
     scene.add(root);
 
+    // colorConfigs
     colorConfigs.forEach(cfg => {
       const obj = root.getObjectByName(cfg.name);
-      if (!obj) {
-        console.warn(`[Parpadeo] No encontrado: "${cfg.name}"`);
-        return;
-      }
-
+      if (!obj) { console.warn(`[Parpadeo] No encontrado: "${cfg.name}"`); return; }
       const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-      if (!mat || !mat.color) {
-        console.warn(`[Parpadeo] Sin color en: "${cfg.name}"`);
-        return;
-      }
-
+      if (!mat || !mat.color) { console.warn(`[Parpadeo] Sin color en: "${cfg.name}"`); return; }
       cfg.mesh = obj;
       cfg.material = mat;
       cfg.originalColor = mat.color.clone();
     });
 
+    loaderSetProgress(79);
+
+    // traverse — cámara + shadows + mobile downgrade
     root.traverse((obj) => {
       if (obj.isCamera) {
         cameraGLB = obj;
@@ -415,6 +414,9 @@ gltfLoader.load(
       }
     });
 
+    loaderSetProgress(82);
+
+    // animations
     if (gltf.animations.length > 0) {
       mixer = new THREE.AnimationMixer(root);
       let cameraAction = null;
@@ -445,35 +447,59 @@ gltfLoader.load(
 
       mixer.addEventListener("loop", (e) => {
         if (e.action === cameraAction) {
-          modelTime = 0; // resetea el reloj del modelo
-          modelActions.forEach(a => {
-            a.reset();
-            a.play();
-          });
+          modelTime = 0;
+          modelActions.forEach(a => { a.reset(); a.play(); });
         }
       });
     }
 
+    loaderSetProgress(88);
+
     renderPass.camera = cameraGLB || camera;
 
-    setTimeout(() => {
-      clock.getDelta();
-      ready = true;
-      clock.start();
-      loaderDone();
-      initTextOverlay(); // ← NUEVO: inicializa el sistema de textos
-    }, 0);
+    // Compila shaders en GPU (síncrono, puede tardar) → 88–95 %
+    renderer.compile(scene, cameraGLB || camera);
+    loaderSetProgress(95);
+
+    // Inicia el clock y drena el delta acumulado durante toda la carga
+    clock.start();
+    clock.getDelta();
+
+    // Dos frames reales de warmup para subir texturas a la GPU.
+    // El loader overlay cubre el canvas — el usuario no los ve.
+    requestAnimationFrame(() => {
+      if (mixer) mixer.update(0);
+      renderer.render(scene, cameraGLB || camera);
+      loaderSetProgress(98);
+
+      requestAnimationFrame(() => {
+        if (mixer) mixer.update(0);
+        renderer.render(scene, cameraGLB || camera);
+
+        // Drena el delta de los 2 frames de warmup
+        clock.getDelta();
+
+        // 100 % real: GPU lista, shaders compilados, texturas subidas
+        loaderSetProgress(100);
+        ready = true;
+        loaderDone();
+        initTextOverlay();
+      });
+    });
   },
 
+  // ── onProgress: descarga ocupa solo 0–70 % ──────────────────────────────
   (xhr) => {
-    if (xhr.lengthComputable) loaderSetProgress((xhr.loaded / xhr.total) * 100);
+    if (xhr.lengthComputable) {
+      loaderSetProgress((xhr.loaded / xhr.total) * 77);
+    }
   },
 
+  // ── onError ─────────────────────────────────────────────────────────────
   (err) => {
     console.error('Error cargando el modelo:', err);
   }
 );
-
 
 // ========= STATS (PARA VERL EL RENIDIMIENTO) =========
 //const stats = new Stats();

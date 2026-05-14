@@ -66,7 +66,7 @@
        Aparece inmediatamente al cargar la página.
        Se oculta cuando loaderDone() es llamado en main.js
        ================================================ -->
-  <div id="loader-overlay">
+  <!-- <div id="loader-overlay">
     <div id="loader-corner"></div>
     <h1 id="loader-title"><span></span></h1>
     <p id="loader-subtitle">Cargando..</p>
@@ -80,7 +80,27 @@
       </div>
     </div>
     <p id="loader-status">Iniciando escena</p>
+  </div> -->
+
+  <div id="loader-overlay">
+ 
+  <!-- 4 esquinas del cuadrado central -->
+  <div class="loader-corner tl" id="lc-tl"></div>
+  <div class="loader-corner tr" id="lc-tr"></div>
+  <div class="loader-corner bl" id="lc-bl"></div>
+  <div class="loader-corner br" id="lc-br"></div>
+ 
+  <!-- Porcentaje -->
+  <div id="loader-percent-num">00%</div>
+ 
+  <!-- Barra -->
+  <div id="loader-bar-wrap">
+    <div id="loader-bar-track">
+      <div id="loader-bar-fill"></div>
+    </div>
   </div>
+ 
+</div>
 
   <!-- Canvas Three.js -->
   <div id="canvas-container"></div>

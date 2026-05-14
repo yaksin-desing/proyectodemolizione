@@ -1,34 +1,17 @@
-/* =====================================================
-   LOADER — Variables de personalización
-   Cambia estos valores para ajustar el estilo
-   ===================================================== */
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&display=swap');
+
 :root {
-  --loader-bg:          #000000;       /* Fondo del loader */
-  --loader-accent:      #ffffff;       /* Color acento (azul igual que el parpadeo) */
-  --loader-text:        #ffffff;       /* Color del texto */
-  --loader-text-dim:    rgb(255, 255, 255); /* Texto secundario */
-  --loader-bar-bg:      rgba(255,255,255,0.08); /* Fondo de la barra */
-  --loader-bar-fill:    #0033ff;       /* Color de relleno de la barra */
-  --loader-font-title:  'Bebas Neue', sans-serif; /* Fuente del título */
-  --loader-font-body:   'DM Mono', monospace;     /* Fuente del texto */
-  --loader-transition:  0.8s cubic-bezier(0.77, 0, 0.175, 1); /* Salida del loader */
+  --loader-bg:           #000000;
+  --loader-text:         rgba(255, 255, 255, 0.82);
+  --loader-bar-bg:       rgba(255, 255, 255, 0.10);
+  --loader-bar-fill:     rgba(255, 255, 255, 0.75);
+  --loader-corner-color: rgba(255, 255, 255, 0.75);
+  --loader-font-body:    'DM Mono', monospace;
+  --loader-transition:   0.8s cubic-bezier(0.77, 0, 0.175, 1);
+  --corner-arm:          18px;
 }
 
-/* =====================================================
-   IMPORT FUENTES — puedes cambiarlas aquí
-   ===================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&display=swap');
-
-
-#controls{
-    z-index: 10000;
-    position: absolute; left: 50%; bottom: 10px; 
-    transform: translateX(-50%)
-}
-
-/* =====================================================
-   OVERLAY PRINCIPAL
-   ===================================================== */
+/* ── OVERLAY ─────────────────────────────────────────── */
 #loader-overlay {
   position: fixed;
   inset: 0;
@@ -38,10 +21,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0;
   pointer-events: all;
-
-  /* Salida: fade + slide up */
+  overflow: hidden;
   transition:
     opacity var(--loader-transition),
     transform var(--loader-transition);
@@ -53,57 +34,50 @@
   pointer-events: none;
 }
 
-#loader-overlay.gone {
-  display: none;
+#loader-overlay.gone { display: none; }
+
+/* ── CORNER BRACKETS ─────────────────────────────────── */
+.loader-corner {
+  position: absolute;
+  width: var(--corner-arm);
+  height: var(--corner-arm);
+  border-color: var(--loader-corner-color);
+  border-style: solid;
+}
+
+.loader-corner.tl { border-width: 1px 0 0 1px; }
+.loader-corner.tr { border-width: 1px 1px 0 0; }
+.loader-corner.bl { border-width: 0 0 1px 1px; }
+.loader-corner.br { border-width: 0 1px 1px 0; }
+
+/* Expansión al terminar — clase añadida por JS */
+.loader-corner.expanding {
+  transition:
+    transform 0.75s cubic-bezier(0.77, 0, 0.175, 1),
+    width     0.75s cubic-bezier(0.77, 0, 0.175, 1),
+    height    0.75s cubic-bezier(0.77, 0, 0.175, 1),
+    opacity   0.5s  ease 0.65s;
 }
 
 
-/* =====================================================
-   TÍTULO — personaliza el nombre de tu proyecto
-   ===================================================== */
-#loader-title {
-  font-family: var(--loader-font-title);
-  font-size: clamp(2.8rem, 8vw, 6rem);
-  color: var(--loader-text);
-  letter-spacing: 0.12em;
-  line-height: 1;
-  margin-bottom: 6px;
-  opacity: 0;
-  transform: translateY(12px);
-  animation: loaderFadeUp 0.7s ease forwards 0.1s;
-}
+.loader-corner.fade-out { opacity: 0; }
 
-/* Span de acento dentro del título */
-#loader-title span {
-  color: var(--loader-accent);
-}
-
-
-/* =====================================================
-   SUBTÍTULO / TAGLINE
-   ===================================================== */
-#loader-subtitle {
+/* ── PORCENTAJE ──────────────────────────────────────── */
+#loader-percent-num {
   font-family: var(--loader-font-body);
-  font-size: clamp(0.65rem, 1.5vw, 0.8rem);
-  color: var(--loader-text-dim);
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
-  margin-bottom: 52px;
-  opacity: 0;
-  animation: loaderFadeUp 0.7s ease forwards 0.25s;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: var(--loader-text);
+  position: relative;
+  z-index: 2;
+  margin-bottom: 100px;
+
 }
 
-
-/* =====================================================
-   BARRA DE PROGRESO
-   ===================================================== */
+/* ── BARRA DE PROGRESO ───────────────────────────────── */
 #loader-bar-wrap {
-  width: clamp(200px, 40vw, 360px);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  opacity: 0;
-  animation: loaderFadeUp 0.7s ease forwards 0.4s;
+  margin-bottom: -100px;
+  width: clamp(180px, 38vw, 280px);
 }
 
 #loader-bar-track {
@@ -111,7 +85,7 @@
   height: 1px;
   background: var(--loader-bar-bg);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 #loader-bar-fill {
@@ -119,94 +93,14 @@
   left: 0; top: 0; bottom: 0;
   width: 0%;
   background: var(--loader-bar-fill);
-  transition: width 0.35s ease;
-  /* Brillo sutil en la punta de la barra */
-  box-shadow: 0 0 8px var(--loader-accent), 0 0 2px #fff;
+  transition: width 0.3s ease;
 }
 
-/* Números de porcentaje */
-#loader-percent {
-  font-family: var(--loader-font-body);
-  font-size: 0.7rem;
-  color: var(--loader-text-dim);
-  letter-spacing: 0.2em;
-  display: flex;
-  justify-content: space-between;
-}
-
-#loader-percent-num {
-  color: var(--loader-accent);
-  font-weight: 400;
-}
-
-
-/* =====================================================
-   TEXTO DE ESTADO — mensajes de carga
-   ===================================================== */
-#loader-status {
-  font-family: var(--loader-font-body);
-  font-size: 0.65rem;
-  color: var(--loader-text-dim);
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  margin-top: 28px;
-  min-height: 1em;
-  opacity: 0;
-  animation: loaderFadeUp 0.7s ease forwards 0.55s;
-
-  /* Parpadeo suave del cursor al final */
-  &::after {
-    content: '_';
-    opacity: 1;
-    animation: loaderCursor 1s step-end infinite;
-  }
-}
-
-
-/* =====================================================
-   DECORACIÓN — líneas de esquina (opcional)
-   Puedes eliminar este bloque si no te gusta
-   ===================================================== */
-#loader-corner {
-  position: absolute;
-  inset: 28px;
-  pointer-events: none;
-}
-
-#loader-corner::before,
-#loader-corner::after {
+#loader-bar-fill::after {
   content: '';
   position: absolute;
-  width: 28px;
-  height: 28px;
-  border-color: rgba(255,255,255,0.12);
-  border-style: solid;
-}
-
-/* Esquina superior izquierda */
-#loader-corner::before {
-  top: 0; left: 0;
-  border-width: 1px 0 0 1px;
-}
-
-/* Esquina inferior derecha */
-#loader-corner::after {
-  bottom: 0; right: 0;
-  border-width: 0 1px 1px 0;
-}
-
-
-/* =====================================================
-   KEYFRAMES
-   ===================================================== */
-@keyframes loaderFadeUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes loaderCursor {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
+  right: -1px; top: -2px;
+  width: 2px; height: 5px;
+  background: #fff;
+  opacity: 0.9;
 }
