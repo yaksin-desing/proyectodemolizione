@@ -14,7 +14,7 @@
   --text-font-title  : "Outfit", sans-serif;
   --text-font-body   : "Outfit", sans-serif;
   --text-pos-left    : 6vw;        /* distancia desde la izquierda */
-  --text-pos-bottom  : 12vh;       /* distancia desde abajo */
+  --text-pos-bottom  : 10vh;       /* distancia desde abajo */
   --text-anim-in     : 0.55s;      /* duración entrada */
   --text-anim-out    : 0.35s;      /* duración salida */
 }
@@ -102,4 +102,22 @@
 @keyframes textFadeDown {
   from { opacity: 1; transform: translateY(0);    }
   to   { opacity: 0; transform: translateY(-8px); }
+}
+
+@media (max-width: 708px) {
+  #scene-text {
+    width: 100%;
+    max-width : min(100%, 80vw);
+    bottom: 7vh;
+  }
+
+  #scene-title {
+      font-size : clamp(1.1rem, 1vw, 0.9rem);
+      font-weight: 300;
+  }
+
+  #scene-body{
+      font-size : clamp(0.9rem, 1.2vw, 0.7rem);
+      font-weight: 200;
+  }
 }
